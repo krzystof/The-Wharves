@@ -1,0 +1,16 @@
+nginx:
+    image: krzystof/larawhale-nginx:latest
+    ports:
+        - "80:80"
+    links:
+        - fpm
+    volumes:
+        - .:/code/
+fpm:
+    image: krzystof/larawhale-php7fpm:latest
+    environment:
+        APP_ENV: local
+    expose:
+        - "9000"
+    volumes:
+        - .:/code/
