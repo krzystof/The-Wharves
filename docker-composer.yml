@@ -1,16 +1,22 @@
-nginx:
-    image: krzystof/the-wharves-nginx:latest
-    ports:
-        - "80:80"
-    links:
-        - fpm
+code:
+    image: krzystof/the-wharves-code:latest
     volumes:
-        - .:/code/
+        - .:/code
+
 fpm:
     image: krzystof/the-wharves-php7fpm:latest
     environment:
         APP_ENV: local
     expose:
         - "9000"
-    volumes:
-        - .:/code/
+    volumes_from:
+      - code
+
+nginx:
+    image: krzystof/the-wharves-nginx:latest
+    ports:
+        - "80:80"
+    links:
+        - fpm
+    volumes_from:
+      - code
