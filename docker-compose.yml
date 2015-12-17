@@ -1,22 +1,35 @@
 code:
-    image: krzystof/the-wharves-code:latest
+    image: krzystof/the-wharves-code
     volumes:
         - .:/code
 
 fpm:
-    image: krzystof/the-wharves-php7fpm:latest
-    environment:
-        APP_ENV: local
+    image: krzystof/the-wharves-php7fpm
+    env_file: .env
     expose:
         - "9000"
     volumes_from:
       - code
+    working_dir: /code
 
 nginx:
-    image: krzystof/the-wharves-nginx:latest
+    image: krzystof/the-wharves-nginx
     ports:
         - "80:80"
     links:
         - fpm
     volumes_from:
       - code
+
+composer:
+    image: krzystof/the-wharves-composer
+    volumes_from:
+      - code
+
+acceptance:
+    image: behat
+    env_file: .env.acceptance
+    volumes_from:
+      - code
+    working_dir: /code
+    entrypoint: "vendor/bin/behat"
