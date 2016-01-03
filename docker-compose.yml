@@ -26,10 +26,15 @@ composer:
     volumes_from:
       - code
 
-acceptance:
+behat:
     image: behat
     env_file: .env.acceptance
     volumes_from:
       - code
     working_dir: /code
     entrypoint: "vendor/bin/behat"
+
+acceptance:
+    image: acceptance
+    volumes_from:
+      - code
