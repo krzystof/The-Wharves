@@ -1,0 +1,14 @@
+{
+    "name": "krzystof/wharf",
+    "description": "A CLI to quickly build a Php development environment with Docker",
+    "require": {
+        "symfony/console": "^3.0"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Christophe Graniczny",
+            "email": "christophe.graniczny@gmail.com"
+        }
+    ]
+}

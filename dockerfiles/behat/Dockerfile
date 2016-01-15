@@ -6,7 +6,7 @@ MAINTAINER Christophe Graniczny
 ENV DEBIAN_FRONTEND noninteractive
 
 RUN apt-get update
-RUN apt-get install -y -q libicu52 wget php5-cli curl php5-curl git
+RUN apt-get install -y -q libicu52 wget php5-cli curl php5-curl git php5-sqlite
 
 WORKDIR /var/work
 VOLUME /var/work
@@ -22,7 +22,10 @@ RUN cd /var/tools && composer require \
     behat/mink-selenium2-driver ^1.3 \
     behat/mink ^1.7 \
     behat/mink-goutte-driver ^1.2 \
-    laracasts/behat-laravel-extension ^1.0
+    laracasts/behat-laravel-extension ^1.0 \
+    emuse/behat-html-formatter
+
+RUN sed -i '/<?php/a require_once "/var/work/vendor/autoload.php";' ../tools/vendor/autoload.php
 
 #    "behat/mink-browserkit-driver:~1.2" \
 #    "fabpot/goutte:~1.0"
