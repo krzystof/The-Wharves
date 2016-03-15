@@ -21,14 +21,13 @@ if (is_file($autoload = __DIR__ . '/../vendor/autoload.php')) {
     exit(1);
 }
 
-use Wharf\Commands\Laravel;
-use Wharf\Commands\CheckRequirements;
 use Symfony\Component\Console\Application;
 
 $app = new Application('Wharf', '0.1');
 
-$app->add(new CheckRequirements);
+$app->add(new Wharf\Commands\CheckRequirements);
+$app->add(new Wharf\Commands\Web);
 $app->add(new Wharf\Commands\Db);
-$app->add(new Laravel);
+$app->add(new Wharf\Commands\Laravel);
 
 $app->run();

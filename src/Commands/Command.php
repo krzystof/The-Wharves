@@ -78,4 +78,11 @@ abstract class Command extends SymfonyCommand
         $this->comment("\n".$message."\n");
         exit(1);
     }
+
+    protected function runCommand($name)
+    {
+        $command = $this->getApplication()->find($name);
+
+        $command->run($this->input, $this->output);
+    }
 }

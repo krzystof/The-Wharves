@@ -1,6 +1,7 @@
 # Wharf
 
 ## TODO
+the web command
 
 ## Package in development. Come back later!
 The plan is to support Linux and Mac, heavily inspired and helped by Inviqa's dock-cli package. Check it out if you don't have Docker on your machine!

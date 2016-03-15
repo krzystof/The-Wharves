@@ -20,20 +20,12 @@ class Laravel extends Command
 
     public function handle()
     {
-        // TODO Execute check requirements command
+        $this->runCommand('check');
 
-        $output->writeln([
-            '<info>Setting up a new project for a Laravel app...</info>'
-        ]);
+        $this->info('Setting up your Laravel project...');
 
-        $project = Wharf::onCurrentDirectory();
+        $this->runCommand('web');
 
-        /*
-         * WEB Container
-         */
-        // TODO detect directory, prompt to confirm directory to serve
-        // TODO prompt for hostname
-        // TODO create a .wharf and nginx and put nginx conf in it
 
         /*
          * PHP Container
@@ -70,16 +62,8 @@ class Laravel extends Command
 
         $project->setPhpVersion($phpVersion);
 
-        /*
-         * CALL A COMMAND FROM ANOTHER COMMAND
-         */
-        // $command = $this->getApplication()->find('db');
+        $this->runCommand('db');
 
-        // $arguments = array(
-        //     'command' => 'demo:greet',
-        //     'name'    => 'Fabien',
-        //     '--yell'  => true,
-        // );
 
         // $greetInput = new ArrayInput($arguments);
         // $returnCode = $command->run($greetInput, $output);
