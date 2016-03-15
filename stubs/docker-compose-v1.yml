@@ -1,0 +1,27 @@
+code:
+    image: wharf/code
+    volumes:
+        - .:/code
+
+php:
+    image: wharf/php:7.0
+    expose:
+      - "9000"
+    volumes_from:
+      - code
+
+web:
+    image: wharf/nginx:??
+    ports:
+      - "80:80"
+    links:
+      - php
+    volumes_from:
+      - code
+
+db:
+  image: wharf/mysql:5.7
+  ports:
+    - "3306:3306"
+  volumes_from:
+    - code

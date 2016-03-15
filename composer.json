@@ -1,8 +1,14 @@
 {
     "name": "krzystof/wharf",
-    "description": "A CLI to quickly build a Php development environment with Docker",
+    "description": "A CLI to quickly build a PHP development environment with Docker",
     "require": {
-        "symfony/console": "^3.0"
+        "symfony/console": "^3.0",
+        "symfony/process": "^3.0",
+        "vlucas/phpdotenv": "^2.2",
+        "phpunit/phpunit": "^5.2",
+        "league/flysystem": "^1.0",
+        "league/flysystem-memory": "^1.0",
+        "symfony/finder": "^3.0"
     },
     "license": "MIT",
     "authors": [
@@ -10,5 +16,11 @@
             "name": "Christophe Graniczny",
             "email": "christophe.graniczny@gmail.com"
         }
-    ]
+    ],
+    "autoload": {
+      "psr-4": {
+        "Wharf\\": "src"
+      }
+    },
+    "bin": ["bin/wharf"]
 }
