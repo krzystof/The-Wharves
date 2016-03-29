@@ -50,6 +50,14 @@ class Db extends Command
 
         $this->project->setDb($dbContainer);
 
+        // TODO put a script in .wharf to create the database on the fly.
+        // use .env: ()
+        // DB_HOST=127.0.0.1
+        // DB_DATABASE=homestead
+        // DB_USERNAME=homestead
+        // DB_PASSWORD=secret
+
+
         $this->project->save();
     }
 }

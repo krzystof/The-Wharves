@@ -8,7 +8,8 @@
         "phpunit/phpunit": "^5.2",
         "league/flysystem": "^1.0",
         "league/flysystem-memory": "^1.0",
-        "symfony/finder": "^3.0"
+        "symfony/finder": "^3.0",
+        "illuminate/support": "^5.2"
     },
     "license": "MIT",
     "authors": [
@@ -20,6 +21,11 @@
     "autoload": {
       "psr-4": {
         "Wharf\\": "src"
+      }
+    },
+    "autoload-dev": {
+      "psr-4": {
+        "WharfTests\\": "tests"
       }
     },
     "bin": ["bin/wharf"]

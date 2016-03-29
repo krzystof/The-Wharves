@@ -2,7 +2,9 @@
 
 namespace Wharf\Commands;
 
-use Wharf\Wharf;
+use Wharf\Project;
+use Symfony\Component\Console\Helper\Table;
+use Symfony\Component\Console\Question\Question;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\ChoiceQuestion;
@@ -17,14 +19,17 @@ abstract class Command extends SymfonyCommand
              ->setDescription($this->description);
     }
 
+    public function initialize($value='')
+    {
+        $this->project = Project::onCurrentDirectory();
+
+        $this->questionHelper = $this->getHelper('question');
+    }
+
     public function execute(InputInterface $input, OutputInterface $output)
     {
         $this->input = $input;
         $this->output = $output;
-
-        $this->project = Wharf::onCurrentDirectory();
-
-        $this->questionHelper = $this->getHelper('question');
 
         $this->handle();
     }
@@ -52,7 +57,7 @@ abstract class Command extends SymfonyCommand
         ]);
     }
 
-    protected function askConfirmation($question, $default = false)
+    protected function confirm($question, $default = false)
     {
         $question = new ConfirmationQuestion('<question>'.$question.'</question>', $default);
 
@@ -61,9 +66,14 @@ abstract class Command extends SymfonyCommand
 
     protected function choose($question, $choices, $default)
     {
-        // die(var_dump($choices, $default));
-
         $question = new ChoiceQuestion('<question>'.$question.'</question>', $choices, strtolower($default));
+
+        return $this->ask($question);
+    }
+
+    protected function prompt($question)
+    {
+        $question = new Question('<question>'.$question.'</question>');
 
         return $this->ask($question);
     }
@@ -84,5 +94,23 @@ abstract class Command extends SymfonyCommand
         $command = $this->getApplication()->find($name);
 
         $command->run($this->input, $this->output);
+    }
+
+    protected function displayInfo($subject)
+    {
+        $this->lineBreak();
+        $this->info(sprintf('About: <fg=yellow>%s</>', $subject->name()));
+        $this->lineBreak();
+
+        foreach ($subject->infos() as $label => $detail) {
+            $this->info(sprintf('%s:%s%s', $label, "\t\t", $detail));
+        }
+
+        $this->lineBreak();
+    }
+
+    protected function lineBreak()
+    {
+        $this->output->writeln("\n");
     }
 }

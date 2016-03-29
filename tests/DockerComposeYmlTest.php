@@ -1,10 +1,12 @@
 <?php
 
-use Wharf\Project\Container;
-use Symfony\Component\Yaml\Yaml;
-use Wharf\Project\DockerComposeYml;
+namespace WharfTest;
 
-class DockerComposeYmlTest extends PHPUnit_Framework_TestCase
+use Wharf\Containers\Container;
+use Symfony\Component\Yaml\Yaml;
+use Wharf\DockerComposeYml;
+
+class DockerComposeYmlTest extends \PHPUnit_Framework_TestCase
 {
     /** @test */
     function it_returns_a_container_by_name()
@@ -13,8 +15,8 @@ class DockerComposeYmlTest extends PHPUnit_Framework_TestCase
 
         $container = $dockerComposeYml->container('php');
 
-        $this->assertInstanceOf('Wharf\Project\Container', $container);
-        $this->assertEquals('php', $container->name());
+        $this->assertInstanceOf(Container::class, $container);
+        $this->assertEquals('php', $container->service());
     }
 
     private function getStubbedFile()
@@ -40,18 +42,4 @@ class DockerComposeYmlTest extends PHPUnit_Framework_TestCase
 
         $this->assertInstanceOf(Container::class, $dockerComposeYml->container('php'));
     }
-
-    // /** @test */
-    // function it_can_set_a_different_version_of_php()
-    // {
-    //     $parsedYmlFile = Yaml::parse('tests/Fixtures/docker-compose-v1.yml');
-
-    //     $dockerComposeYml = new DockerComposeYml($parsedYmlFile);
-
-    //     $dockerComposeYml->setPhp('5.4');
-
-    //     $container = $dockerComposeYml->container('php');
-
-    //     $this->assertEquals('5.4', $container->version());
-    // }
 }

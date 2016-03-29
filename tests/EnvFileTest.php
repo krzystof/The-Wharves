@@ -1,10 +1,12 @@
 <?php
 
+namespace WharfTests;
+
 use Wharf\Project\EnvFile;
 use League\Flysystem\Filesystem;
 use League\Flysystem\Memory\MemoryAdapter;
 
-class EnvFileTest extends PHPUnit_Framework_TestCase
+class EnvFileTest extends \PHPUnit_Framework_TestCase
 {
     function setUp()
     {
@@ -39,10 +41,12 @@ class EnvFileTest extends PHPUnit_Framework_TestCase
         $this->assertEquals('', $this->envFile->get('NOT_SET'));
     }
 
-    /** @test @expectedException Exception */
-    function it_loads_throws_an_exception_if_the_file_does_not_exist()
+    /** @test */
+    function it_loads_an_empty_file_it_does_not_exist()
     {
-        new EnvFile('.noFile', $this->fileSystem);
+        $envFile = new EnvFile('.noFile', $this->fileSystem);
+
+        $this->assertCount(0, $envFile);
     }
 
     /** @test */

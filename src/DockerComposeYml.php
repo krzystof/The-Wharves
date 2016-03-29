@@ -1,8 +1,9 @@
 <?php
 
-namespace Wharf\Project;
+namespace Wharf;
 
 use Exception;
+use Wharf\Containers\Container;
 
 class DockerComposeYml
 {
@@ -33,15 +34,15 @@ class DockerComposeYml
 
     private function loadContainer($name)
     {
-        if (! Container::isSupported($name)) {
+        if (! Container::supports($name)) {
             throw new Exception(sprintf('The container "%s" is not supported.', $name));
         }
 
         if (!array_key_exists($name, $this->parsedFile)) {
-            return $this->containers[$name] = Container::getDefault($name);
+            return $this->containers[$name] = Container::$name([]);
         }
 
-        return $this->containers[$name] = new Container($name, $this->parsedFile[$name]);
+        return $this->containers[$name] = Container::$name($this->parsedFile[$name]);
     }
 
     public function setContainer($type, $container)

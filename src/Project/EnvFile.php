@@ -4,30 +4,38 @@ namespace Wharf\Project;
 
 use Exception;
 
-class EnvFile
+class EnvFile extends Config
 {
-    private $variables = [];
+    protected $filePath;
+    protected $content = '';
+    protected $variables = [];
 
-    private $filePath;
-
-    private $content = '';
-
-    public function __construct($filePath, $fileSystem)
+    public function __construct($filePath = '', $fileSystem = null)
     {
+        if (!$fileSystem || !$fileSystem->has($filePath)) {
+            $this->variables = [];
+
+            return $this;
+        }
+
         $this->filePath = $filePath;
         $this->content  = $fileSystem->read($this->filePath);
 
         $this->loadContent();
     }
 
-    public function loadContent()
+    public function name()
+    {
+        return $this->filePath;
+    }
+
+    protected function loadContent()
     {
         $lines = explode("\n", $this->content);
 
         array_map(function ($line) {
             $this->loadVariable($line);
         }, $lines);
-        // die(var_dump($this->content));
     }
 
     protected function loadVariable($line)
@@ -38,9 +46,9 @@ class EnvFile
         }
     }
 
-    public function name()
+    public static function load($filePath, $fileSystem)
     {
-        return $this->filePath;
+        return new static($filePath, $fileSystem);
     }
 
     public function get($key)
@@ -50,7 +58,16 @@ class EnvFile
 
     public function set($key, $value)
     {
-        $this->content = "\n$key=$value";
+        if (strpos($this->content, $key)) {
+            $currentValue = $this->get($key);
+            str_replace(
+                sprintf('%s=%s', $key, $currentValue),
+                sprintf('%s=%s', $key, $value),
+                $this->content
+            );
+        } else {
+            $this->content = "$key=$value\n";
+        }
 
         $this->loadContent();
     }

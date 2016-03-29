@@ -2,61 +2,81 @@
 
 namespace Wharf\Commands;
 
-use Wharf\Wharf;
-use Wharf\Project\Container;
-
 class Web extends Command
 {
     protected $name = 'web';
 
     protected $description = 'Change the web server of your environment.';
 
+    public function initialize()
+    {
+        parent::initialize();
+
+        $this->webContainer = $this->project->web();
+    }
+
     public function handle()
     {
-        // TODO detect directory, prompt to confirm directory to serve
-        // TODO prompt for hostname
-        // TODO create a .wharf and nginx and put nginx conf in it
-        return;
+        $this->webContainer->displayTo($this->output);
 
-#############################################################################################################
+        $this->confirmUpdatingExistingConfig();
 
-        if ($this->project->detectEnvFile()) {
-            $this->info(sprintf(
-                'Reading environment informations from the file "%s"',
-                $this->project->envFile()->name()
-            ));
-        } else {
-            $specifyFile = $this->ask('Do you want to load a specific file with environment variables?');
+        $this->comment('Reading info from your .env file...');
 
-            if ($specifyFile) {
-                $filePath = $this->ask('Please type in the path relative to the project root:');
+        $this->webContainer->environmentFrom($this->project->envFile());
 
-                $project->loadEnvFile($filePath);
-            } else {
-                $project->useWharfEnvFile();
-            }
-        }
+        $directory = $this->configureDirectoryToServe();
 
-        $this->info(sprintf('Currently using %s %s', $this->project->dbSystem(), $this->project->dbSystemVersion()));
+        $this->webContainer->configure(['DIRECTORY' => $directory]);
 
-        if ($this->project->dbIsLocalhost()) {
-            $agrees = $this->askConfirmation('The database host is set to localhost. It will be set to your "db" to point to a docker container. [y/N]');
+        $this->webContainer->eachInvalidOptions(function ($option) {
+            $value = $this->promptWarning(sprintf('The setting "%s" is required, please enter a value:', $option));
 
-            if ($agrees) {
-                $this->project->setEnvVariable('DB_HOST', 'db');
-            } else {
-                $this->abort('The command was cancelled.');
-            }
-        }
-
-        $db = $this->choose('Please select the db system to use (empty will keep the current db):', Wharf::supportedDbSystems(), $this->project->dbSystem());
-
-        $dbContainer = Container::database($db);
-
-        $this->info(sprintf('Setting your database container to %s version %s', $dbContainer->image(), $dbContainer->tag()));
-
-        $this->project->setDb($dbContainer);
+            $this->webContainer->configure([$option => $value]);
+        });
 
         $this->project->save();
+
+        $this->info('The web container was configured successfully');
+
+        $this->webContainer->displayTo($this->output);
+    }
+
+    public function confirmUpdatingExistingConfig()
+    {
+        if (! $this->webContainer->isNew() && ! $this->confirm('Do you want to update this configuration? [yes|NO]', false)) {
+            $this->abort();
+        }
+    }
+
+    protected function configureDirectoryToServe()
+    {
+        if ($this->webContainer->has('DIRECTORY')) {
+            $this->info(
+                sprintf('Serving from the directory "%s"', $this->webContainer->env('DIRECTORY'))
+            );
+
+            if (! $this->confirm('Do you want to update the directory to serve?', false)) {
+                return;
+            }
+        } else {
+            $this->comment('The directory to serve is not set.');
+        }
+
+        $directory = $this->project->detectDirectoryToServe();
+
+        if ($this->confirmUsingDirectory($directory)) {
+            return $directory;
+        }
+
+        return $this->prompt('Which directory should be served?');
+    }
+
+    protected function confirmUsingDirectory($directory)
+    {
+        return $this->confirm(sprintf(
+            'The directory "/%s" is present. Would you like to serve from this location? [YES|no]',
+            $directory
+        ), true);
     }
 }

@@ -1,7 +1,6 @@
 #!/usr/bin/env php
 <?php
 
-// TODO this will change. likely -> wharf will be a global command
 if (is_file($autoload = getcwd() . '/vendor/autoload.php')) {
     require $autoload;
 } elseif (is_file($autoload = getcwd() . '/../../autoload.php')) {

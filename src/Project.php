@@ -2,28 +2,25 @@
 
 namespace Wharf;
 
+use Wharf\Project\Config;
 use Wharf\Project\EnvFile;
-use InvalidArgumentException;
 use League\Flysystem\Filesystem;
 use Symfony\Component\Yaml\Yaml;
 use League\Flysystem\MountManager;
 use Symfony\Component\Yaml\Dumper;
 use League\Flysystem\Adapter\Local;
-use Wharf\Project\DockerComposeYml;
 
-class Wharf
+class Project
 {
     const WHARF = 'wharf';
-
     const PROJECT = 'project';
 
+    private static $commonDir = ['public', 'web', 'www'];
     private $fileSystem;
-
-    private $dockerComposeFilename = 'docker-compose.yml';
-
     private $dockerComposeFile;
-
+    private $dockerComposeFilename = 'docker-compose.yml';
     private $envFile;
+    private $configs = [];
 
     public static function onCurrentDirectory()
     {
@@ -37,14 +34,14 @@ class Wharf
         return new static($filesystem, $envFile);
     }
 
-    private function __construct($projectFilesystem, $envFile = '.env')
+    private function __construct($projectFilesystem, $envFile = null)
     {
         $this->fileSystem = new MountManager([
             self::WHARF   => new Filesystem(new Local(dirname(dirname(__FILE__)))),
             self::PROJECT => $projectFilesystem,
         ]);
 
-        $this->envFile = $envFile ?: '.env';
+        $this->envFile = $envFile;
 
         $this->loadDockerComposeFile();
     }
@@ -60,13 +57,7 @@ class Wharf
             return $this->envFile;
         }
 
-        if (! $this->projectDir()->has($this->envFile)) {
-            $this->projectDir()->write($this->envFile, '# WHARF ENV');
-        }
-
-        if (is_string($this->envFile)) {
-            $this->loadEnvFile();
-        }
+        $this->loadEnvFile();
 
         return $this->envFile;
     }
@@ -117,6 +108,11 @@ class Wharf
         $yaml = (new Dumper)->dump($this->dockerComposeFile->content(), 4);
 
         $this->projectDir()->put('docker-compose.yml', $yaml);
+
+        array_map(function ($config) {
+            $this->projectDir()->put($config->name(), $config);
+        }, $this->configs);
+
     }
 
     public static function supportedPhpVersions()
@@ -137,7 +133,7 @@ class Wharf
     public function setPhpVersion($version)
     {
         if (! in_array($version, Wharf::supportedPhpVersions())) {
-            throw new InvalidArgumentException(sprintf('The version %s for php is not valid.', $version));
+            throw new \InvalidArgumentException(sprintf('The version %s for php is not valid.', $version));
         }
 
         return $this->dockerComposeFile->container('php')->setTag($version);
@@ -168,5 +164,59 @@ class Wharf
     public function setDb($container)
     {
         $this->dockerComposeFile->setContainer('db', $container);
+    }
+
+    public function serveDir()
+    {
+        return $this->config('web')->get('SERVE_DIR');
+    }
+
+    public function setServeDir($directory)
+    {
+        $this->config('web')->set('SERVE_DIR', $directory);
+    }
+
+    public function config($name)
+    {
+        if (array_key_exists($name, $this->configs)) {
+            return $this->configs[$name];
+        }
+
+        if (! $this->projectDir()->has(sprintf('.wharf/%s/variables', $name))) {
+            $this->projectDir()->write(sprintf('.wharf/%s/variables', $name), '');
+        }
+
+        return $this->configs[$name] = Config::load(sprintf('.wharf/%s/variables', $name), $this->projectDir());
+    }
+
+    public function detectDirectoryToServe()
+    {
+        foreach (static::$commonDir as $dir) {
+            if ($this->projectDir()->has($dir)) {
+                return $dir;
+            }
+        }
+
+        return '';
+    }
+
+    public function container($name)
+    {
+        return $this->dockerComposeFile->container($name);
+    }
+
+    public function addContainer($value='')
+    {
+        # code...
+    }
+
+    public function web()
+    {
+        return $this->dockerComposeFile->container('web');
+    }
+
+    public function db()
+    {
+        return $this->dockerComposeFile->container('db');
     }
 }
