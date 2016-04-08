@@ -2,42 +2,26 @@
 
 namespace WharfTest\Containers;
 
-use Wharf\Containers\Container;
+use Wharf\Containers\Image;
 use Wharf\Containers\DbContainer;
 use Wharf\Containers\PhpContainer;
 use Wharf\Containers\WebContainer;
+use Wharf\Containers\WharfContainers;
 
 class ContainerTest extends \PHPUnit_Framework_TestCase
 {
     /** @test */
-    function it_checks_if_a_container_is_supported()
+    function it_creates_php_containers()
     {
-        $this->assertTrue(Container::supports('php'));
-        $this->assertFalse(Container::supports('ruby'));
-    }
-
-    /** @test */
-    function it_supports_the_following_software()
-    {
-        $this->assertTrue(Container::supports('php'));
-        $this->assertTrue(Container::supports('db'));
-        $this->assertTrue(Container::supports('web'));
-
-        $this->assertTrue(DbContainer::supports('mysql'));
-    }
-
-    /** @test */
-    function it_creates_php_container()
-    {
-        $container = Container::php();
+        $container = WharfContainers::php();
 
         $this->assertInstanceOf(PhpContainer::class, $container);
     }
 
     /** @test */
-    function it_creates_db_container()
+    function it_creates_db_containers()
     {
-        $container = Container::db();
+        $container = WharfContainers::db();
 
         $this->assertInstanceOf(DbContainer::class, $container);
     }
@@ -45,60 +29,48 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     /** @test */
     function it_should_create_web_containers_with_a_valid_service()
     {
-        $container = Container::web();
+        $container = WharfContainers::web();
 
         $this->assertInstanceOf(WebContainer::class, $container);
         $this->assertEquals('web', $container->service());
     }
 
     /** @test */
-    function it_should_create_empty_containers()
+    function it_should_create_new_containers()
     {
-        $container = Container::web();
+        $container = WharfContainers::web();
 
-        $this->assertTrue($container->isEmpty());
+        $this->assertTrue($container->isNew());
     }
 
     /** @test */
-    function it_should_see_if_a_container_is_not_empty()
+    function it_should_set_the_image_appropriatly()
     {
-        $container = Container::web(['image' => 'nginx']);
+        $container = WharfContainers::web(['image' => 'nginx:1.8.1']);
 
-        $this->assertFalse($container->isEmpty());
+        $this->assertInstanceOf(Image::class, $container->image());
+        $this->assertEquals('nginx:1.8.1', $container->image()->__toString());
     }
 
-    /** @test */
-    function it_should_set_the_tag_latest_by_default()
-    {
-        $container = Container::web(['image' => 'nginx']);
-
-        $this->assertEquals('nginx', $container->image());
-        $this->assertEquals('latest', $container->tag());
-    }
-
-    /** @test */
-    function it_should_set_the_tag_if_provided()
-    {
-        $container = Container::web(['image' => 'nginx:2.0']);
-
-        $this->assertEquals('nginx', $container->image());
-        $this->assertEquals('2.0', $container->tag());
-    }
-
-    /**
-     * @test
-     * @expectedException Exception
-     */
+    /** @test @expectedException Exception */
     function it_errors_if_the_image_is_invalid()
     {
-        Container::db(['image' => 'excel']);
+        WharfContainers::db()->image('excel');
+    }
+
+    /** @test */
+    function it_should_always_have_an_instance_of_an_image()
+    {
+        $container = WharfContainers::web();
+
+        $this->assertInstanceOf(Image::class, $container->image());
     }
 
     /** @test */
     function it_creates_new_containers_with_unset_image()
     {
-        $container = Container::db();
+        $container = WharfContainers::db();
 
-        $this->assertEquals('not set', $container->image());
+        $this->assertEquals('not_set', $container->image()->name());
     }
 }

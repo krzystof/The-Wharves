@@ -2,5 +2,6 @@
 
 namespace Wharf\Commands\Exceptions;
 
-class EnvironmentNotR
-
+class CommandAborted extends \Exception
+{
+}

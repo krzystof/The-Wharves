@@ -24,10 +24,7 @@ class DockerComposeYmlTest extends \PHPUnit_Framework_TestCase
         return Yaml::parse(file_get_contents(dirname(__DIR__).'/stubs/docker-compose-v1.yml'));
     }
 
-    /**
-     * @test
-     * @expectedException Exception
-     */
+    /** @test @expectedException Exception */
     function it_throws_an_exception_if_the_container_is_invalid()
     {
         $dockerComposeYml = new DockerComposeYml($this->getStubbedFile());

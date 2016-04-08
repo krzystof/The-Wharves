@@ -2,19 +2,28 @@
 
 namespace Wharf\Containers;
 
-use Exception;
+use Wharf\Project\EnvFile;
+use Illuminate\Contracts\Support\Arrayable;
 
-abstract class Container
+abstract class Container implements Arrayable
 {
-    protected $service;
-
     protected $config;
 
-    protected $changed = false;
+    protected $updated = false;
 
-    protected function __construct($service = '', $config = [])
+    abstract public static function service();
+
+    abstract protected function configurables();
+
+    abstract protected function requiredSettings();
+
+    public static function fromConfig($config)
     {
-        $this->service = $service;
+        return new static($config);
+    }
+
+    protected function __construct($config = [])
+    {
         $this->config = collect($config);
 
         $this->validateImage();
@@ -22,33 +31,21 @@ abstract class Container
 
     protected function validateImage()
     {
-        if ($this->config->has('image') && ! static::supports($this->image())) {
-            throw new \Exception(sprintf('The image "%s" is not supported.', $this->image()));
+        if ($this->config->has('image')) {
+            $image = Image::make($this->service().':'.$this->config->get('image'));
+
+            $this->config->put('image', $image);
         }
-
-        if (! $this->tag() && $this->config->has('image')) {
-            $this->config['image'] .= ':latest';
-        }
-    }
-
-    public function getDefault()
-    {
-        # code...
-    }
-
-    public static function fromConfig($config)
-    {
-        return new static(static::SERVICE, $config);
     }
 
     public function env($key)
     {
-        if (! $this->config->has('environment')) {
-            return '';
+        if (! $this->isValidSetting($key)) {
+            return null;
         }
 
         if (! $this->environment()->has($key)) {
-            return '';
+            return 'not_set';
         }
 
         return $this->environment()->get($key);
@@ -72,9 +69,16 @@ abstract class Container
         $this->changed();
     }
 
+    public function configure($options)
+    {
+        collect($options)->each(function ($value, $setting) {
+            $this->environmentFrom($this->environment()->put($setting, $value));
+        });
+    }
+
     protected function filterConfig($config)
     {
-        return collect($config)->filter(function ($value, $option) {
+        return collect($config)->filter(function ($default, $option) {
             return $this->isValidSetting($option);
         });
     }
@@ -84,81 +88,122 @@ abstract class Container
         return $this->configurables()->contains($option);
     }
 
-    abstract protected function configurables();
+    public function eachInvalidOptions($callback)
+    {
+        $invalidOptions = $this->requiredSettings()->filter(function ($default, $option) {
+            return in_array($this->env($option), ['not_set', null]);
+        });
+
+        $invalidOptions->each($callback);
+    }
 
     protected function changed()
     {
-        $this->changed = true;
+        $this->updated = true;
     }
 
-    public static function supports($container)
+    public function saved()
     {
-        return in_array($container, ['web', 'php', 'db']);
-    }
-
-    public function service()
-    {
-        return $this->service;
+        $this->updated = false;
     }
 
     public function isNew()
     {
-        return $this->isEmpty();
-    }
-
-    public function isEmpty()
-    {
         return count($this->config) === 0;
     }
 
-    public function image()
+    public function image($image = false)
     {
-        return $this->splitImage(0);
-    }
-
-    public function tag()
-    {
-        return $this->splitImage(1);
-    }
-
-    private function splitImage($key)
-    {
-        if (! $this->config->has('image')) {
-            return 'not set';
+        if ($image) {
+            return $this->setImage($image);
         }
 
-        $image = explode(':', $this->config->get('image'));
-
-        return array_key_exists($key, $image) ? $image[$key] : '';
+        return $this->config->has('image') ? $this->config->get('image') : Image::makeEmpty();
     }
 
-    public function setTag($tag)
+    protected function setImage($image)
     {
-        $this->config['image'] = str_replace($this->tag(), $tag, $this->config['image']);
+        $image = Image::make($this->service().':'.$image);
+
+        $this->config->put('image', $image);
+
+        $this->changed();
+
+        return $this;
     }
 
-    public function environment()
+    protected function environment()
     {
         return collect($this->config->get('environment', []));
     }
 
-    public static function db($config = [])
-    {
-        return DbContainer::fromConfig($config);
-    }
-
-    public static function web($config = [])
-    {
-        return WebContainer::fromConfig($config);
-    }
-
-    public static function php($config = [])
-    {
-        return PhpContainer::fromConfig($config);
-    }
-
     public function toArray()
     {
-        return $this->config;
+        if (! $this->isValid()) {
+            throw new InvalidContainer(sprintf(
+                'The container "%s" is not configured properly and cannot be saved.',
+                $this->service()
+            ));
+        }
+
+        return $this->config->toArray();
+    }
+
+    protected function isValid()
+    {
+        return $this->image()->exists() && $this->invalidSettings()->count() === 0;
+    }
+
+    protected function invalidSettings()
+    {
+        return $this->requiredSettings()->filter(function ($value, $setting) {
+            return $this->env($setting) === 'not_set';
+        });
+    }
+
+    protected function state()
+    {
+        if ($this->isNew()) {
+            return '<comment>NEW</comment>';
+        }
+
+        if ($this->updated) {
+            return '<comment>UPDATED</comment>';
+        }
+
+        return '<info>SAVED</info>';
+    }
+
+    protected function configState()
+    {
+        return $this->isValid() ? '<info>OK</info>' : '<error>ERROR</error>';
+    }
+
+    public function displayTo($output)
+    {
+        $output->writeln("\n");
+
+        $output->writeln(sprintf(
+            'About: <comment>%s container</comment> (%s)',
+            $this->service(),
+            $this->state()
+        ));
+
+        $output->writeln(sprintf('Config: %s', $this->configState()));
+
+        if ($this->isNew()) {
+            return $output->writeln(sprintf(
+                '%s<error>This container does not exist.</error>%s',
+                "\n",
+                "\n"
+            ));
+        }
+
+        $output->writeln(sprintf('Image: %s', $this->image()->name()));
+        $output->writeln(sprintf('Version: %s', $this->image()->tag()));
+
+        $this->configurables()->each(function ($setting) use ($output) {
+            $output->writeln(sprintf('%s:%s%s', $setting, "\t", $this->env($setting)));
+        });
     }
 }

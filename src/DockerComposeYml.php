@@ -4,56 +4,48 @@ namespace Wharf;
 
 use Exception;
 use Wharf\Containers\Container;
+use Illuminate\Support\Collection;
+use Wharf\Containers\WharfContainers;
 
 class DockerComposeYml
 {
-    private $parsedFile;
-
-    private $containers = [];
+    private $containers;
 
     public function __construct($parsedFile = [])
     {
-        $this->parsedFile = $parsedFile;
+        $this->loadContainers($parsedFile);
     }
 
     public function container($name)
     {
-        if ($this->hasLoadedContainer($name)) {
-            return $this->containers[$name];
-        }
-
-        $this->loadContainer($name);
-
-        return $this->containers[$name];
+        return $this->containers->has($name)
+             ? $this->containers->get($name)
+             : WharfContainers::$name([]);
     }
 
-    private function hasLoadedContainer($name)
+    private function loadContainers($parsedFile)
     {
-        return array_key_exists($name, $this->containers);
+        $this->containers = new Collection;
+
+        foreach ($parsedFile as $name => $config) {
+            $this->containers->put($name, WharfContainers::$name($config));
+        }
     }
 
-    private function loadContainer($name)
+    public function setContainer($service, $container)
     {
-        if (! Container::supports($name)) {
-            throw new Exception(sprintf('The container "%s" is not supported.', $name));
-        }
-
-        if (!array_key_exists($name, $this->parsedFile)) {
-            return $this->containers[$name] = Container::$name([]);
-        }
-
-        return $this->containers[$name] = Container::$name($this->parsedFile[$name]);
-    }
-
-    public function setContainer($type, $container)
-    {
-        $this->containers[$type] = $container;
+        $this->containers[$service] = $container;
     }
 
     public function content()
     {
-        return array_map(function ($container) {
-            return $container->toArray();
-        }, $this->containers);
+        return $this->containers->toArray();
+    }
+
+    public function savedAllContainers()
+    {
+        foreach ($this->containers as $container) {
+            $container->saved();
+        }
     }
 }

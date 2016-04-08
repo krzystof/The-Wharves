@@ -4,19 +4,23 @@ namespace Wharf\Containers;
 
 class PhpContainer extends Container
 {
-    const SERVICE = 'php';
-
-    public static function supports($software)
+    public static function supportedImages()
     {
-        return collect(['php'])->contains($software);
+        return collect(['php']);
     }
 
-    public static function fromConfig($config)
+    public static function service()
     {
-        return new static('php', $config);
+        return 'php';
     }
 
     protected function configurables()
     {
+        return collect([]);
+    }
+
+    protected function requiredSettings()
+    {
+        return collect([]);
     }
 }

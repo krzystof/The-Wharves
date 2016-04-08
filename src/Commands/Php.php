@@ -2,7 +2,9 @@
 
 namespace Wharf\Commands;
 
-class CheckRequirements extends Command
+use Wharf\Containers\Image;
+
+class Php extends Command
 {
     protected $name = 'php';
 
@@ -10,6 +12,24 @@ class CheckRequirements extends Command
 
     public function handle()
     {
-        // do things here
+        $this->container = $this->project->php();
+
+        $this->displayCurrentContainerAndConfirmUpdate();
+
+        $image = Image::make('php:php');
+
+        $version = $this->choose(
+            'Which version of php would you like to use?',
+            $image->availableTags()->toArray(),
+            $this->container->image()->tag()
+        );
+
+        $image = $image->versionTo($version);
+
+        $this->setImageIfNotSame($image);
+
+        $this->displayCurrentContainer();
+
+        $this->saveProject();
     }
 }

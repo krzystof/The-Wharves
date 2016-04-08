@@ -72,6 +72,11 @@ class EnvFile extends Config
         $this->loadContent();
     }
 
+    public function filter($callback)
+    {
+        return collect($this->variables)->filter($callback);
+    }
+
     public function __toString()
     {
         return $this->content;

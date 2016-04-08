@@ -1,20 +1,30 @@
 <?php
 
+namespace WharfTest;
+
 use Wharf\Project;
 use Wharf\Project\EnvFile;
-use Wharf\Containers\Container;
-use Wharf\Project\AppDirectory;
 use League\Flysystem\Filesystem;
 use Wharf\Containers\DbContainer;
+use Illuminate\Support\Collection;
 use Wharf\Containers\WebContainer;
-use Wharf\Project\DockerComposeYml;
+use Wharf\Containers\WharfContainers;
 use League\Flysystem\Memory\MemoryAdapter;
 
-class ProjectTest extends PHPUnit_Framework_TestCase
+class ProjectTest extends \PHPUnit_Framework_TestCase
 {
     function setUp()
     {
-        $this->project = $this->dummyProject();
+        $this->filesystem = new Filesystem(new MemoryAdapter);
+
+        $this->project = Project::onFilesystem($this->filesystem);
+    }
+
+    private function dummyProject()
+    {
+        $this->filesystem = new Filesystem(new MemoryAdapter);
+
+        return Project::onFilesystem($this->filesystem);
     }
 
     /** @test */
@@ -38,7 +48,7 @@ class ProjectTest extends PHPUnit_Framework_TestCase
     {
         $this->dummyProject();
 
-        $this->assertFalse($this->fileSystem->has('docker-compose.yml'));
+        $this->assertFalse($this->filesystem->has('docker-compose.yml'));
     }
 
     /** @test */
@@ -48,15 +58,7 @@ class ProjectTest extends PHPUnit_Framework_TestCase
 
         $project->save();
 
-        $this->assertTrue($this->fileSystem->has('docker-compose.yml'));
-    }
-
-
-    private function dummyProject()
-    {
-        $this->fileSystem = new Filesystem(new MemoryAdapter);
-
-        return Project::onFilesystem($this->fileSystem);
+        $this->assertTrue($this->filesystem->has('docker-compose.yml'));
     }
 
     /** @test */
@@ -64,7 +66,7 @@ class ProjectTest extends PHPUnit_Framework_TestCase
     {
         $project = $this->dummyProject();
 
-        $this->fileSystem->write('.env', '');
+        $this->filesystem->write('.env', '');
 
         $this->assertInstanceOf(EnvFile::class, $project->envFile());
     }
@@ -74,8 +76,8 @@ class ProjectTest extends PHPUnit_Framework_TestCase
     {
         $project = $this->dummyProject();
 
-        $this->assertInstanceOf('Wharf\Project\EnvFile', $project->envFile());
         $this->assertEmpty($project->envFile());
+        $this->assertInstanceOf(EnvFile::class, $project->envFile());
     }
 
     /** @test */
@@ -83,7 +85,7 @@ class ProjectTest extends PHPUnit_Framework_TestCase
     {
         $project = $this->dummyProject();
 
-        $this->fileSystem->put('.env', 'DB_HOST=localhost');
+        $this->filesystem->put('.env', 'DB_HOST=localhost');
 
         $this->assertTrue($project->dbIsLocalhost());
     }
@@ -103,27 +105,29 @@ class ProjectTest extends PHPUnit_Framework_TestCase
     {
         $project = $this->dummyProject();
 
-        $this->fileSystem->put('.env', '');
+        $this->filesystem->put('.env', '');
 
         $project->setEnvVariable('ANOTHER', 'try');
 
-        $this->assertContains('ANOTHER=try', (string) $this->fileSystem->read('.env'));
+        $this->assertContains('ANOTHER=try', (string) $this->filesystem->read('.env'));
     }
 
     /** @test */
     function it_sets_a_db_container()
     {
-        $dbContainer = Container::db(['image' => 'postgres']);
+        $dbContainer = WharfContainers::db(['image' => 'postgres']);
 
-        $this->project->addContainer($dbContainer);
+        $dbContainer->configure(['DB_USERNAME' => 'some_jerk']);
 
-        $this->assertInstanceOf(DbContainer::class, $this->project->db());
+        $this->project->save($dbContainer);
+
+        $this->assertInstanceOf(DbContainer::class, $this->project->service('db'));
     }
 
     /** @test */
     function it_should_detect_the_public_directory()
     {
-        $this->fileSystem->write('public/index.php', '');
+        $this->filesystem->write('public/index.php', '');
 
         $this->assertEquals('public', $this->project->detectDirectoryToServe());
     }
@@ -131,7 +135,7 @@ class ProjectTest extends PHPUnit_Framework_TestCase
     /** @test */
     function it_should_detect_the_web_directory()
     {
-        $this->fileSystem->write('web/index.php', '');
+        $this->filesystem->write('web/index.php', '');
 
         $this->assertEquals('web', $this->project->detectDirectoryToServe());
     }
@@ -139,7 +143,7 @@ class ProjectTest extends PHPUnit_Framework_TestCase
     /** @test */
     function it_should_detect_the_wwww_directory()
     {
-        $this->fileSystem->write('www/index.php', '');
+        $this->filesystem->write('www/index.php', '');
 
         $this->assertEquals('www', $this->project->detectDirectoryToServe());
     }
@@ -147,25 +151,47 @@ class ProjectTest extends PHPUnit_Framework_TestCase
     /** @test */
     function it_should_detect_the_public_directory_in_priority_then_the_web_then_the_www()
     {
-        $this->fileSystem->write('www/index.php', '');
+        $this->filesystem->write('www/index.php', '');
         $this->assertEquals('www', $this->project->detectDirectoryToServe());
-        $this->fileSystem->write('web/index.php', '');
+        $this->filesystem->write('web/index.php', '');
         $this->assertEquals('web', $this->project->detectDirectoryToServe());
-        $this->fileSystem->write('public/index.php', '');
+        $this->filesystem->write('public/index.php', '');
         $this->assertEquals('public', $this->project->detectDirectoryToServe());
     }
 
     /** @test */
     function it_should_return_the_web_container()
     {
-        $this->assertInstanceOf(WebContainer::class, $this->project->web());
+        $this->assertInstanceOf(WebContainer::class, $this->project->service('web'));
     }
 
     /** @test */
     function it_should_return_a_new_web_container_if_it_does_not_exist()
     {
-        $webContainer = $this->project->web();
+        $webContainer = $this->project->service('web');
 
         $this->assertTrue($webContainer->isNew());
+    }
+
+    /** @test @expectedException Exception*/
+    function it_should_errors_if_it_saves_an_invalid_container()
+    {
+        $incompleteContainer = WharfContainers::web()->image('nginx');
+
+        $this->project->save($incompleteContainer);
+    }
+
+    /** @test */
+    function it_should_detect_that_it_is_a_custom_project()
+    {
+        $this->assertEquals('custom', $this->project->type());
+    }
+
+    /** @test */
+    function it_should_detect_that_it_is_a_laravel_project()
+    {
+        $this->filesystem->write('artisan', 'some stuff');
+
+        $this->assertEquals('laravel', $this->project->type());
     }
 }

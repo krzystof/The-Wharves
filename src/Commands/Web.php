@@ -6,57 +6,46 @@ class Web extends Command
 {
     protected $name = 'web';
 
-    protected $description = 'Change the web server of your environment.';
-
-    public function initialize()
-    {
-        parent::initialize();
-
-        $this->webContainer = $this->project->web();
-    }
+    protected $description = 'Change the web server on your environment.';
 
     public function handle()
     {
-        $this->webContainer->displayTo($this->output);
+        $this->container = $this->project->web();
 
-        $this->confirmUpdatingExistingConfig();
+        $this->displayCurrentContainerAndConfirmUpdate();
 
-        $this->comment('Reading info from your .env file...');
+        $this->container->image('nginx');
 
-        $this->webContainer->environmentFrom($this->project->envFile());
+        $this->info(sprintf(
+            'Using %s version %s',
+            $this->container->image()->name(),
+            $this->container->image()->tag()
+        ));
+
+        $this->sourceEnvironment();
 
         $directory = $this->configureDirectoryToServe();
 
-        $this->webContainer->configure(['DIRECTORY' => $directory]);
+        $this->container->configure(['DIRECTORY' => $directory]);
 
-        $this->webContainer->eachInvalidOptions(function ($option) {
-            $value = $this->promptWarning(sprintf('The setting "%s" is required, please enter a value:', $option));
+        $this->checkContainerInvalidOptions();
 
-            $this->webContainer->configure([$option => $value]);
-        });
 
-        $this->project->save();
+        $this->project->save($this->container);
 
-        $this->info('The web container was configured successfully');
+        $this->info('The web container was configured and saved successfully');
 
-        $this->webContainer->displayTo($this->output);
-    }
-
-    public function confirmUpdatingExistingConfig()
-    {
-        if (! $this->webContainer->isNew() && ! $this->confirm('Do you want to update this configuration? [yes|NO]', false)) {
-            $this->abort();
-        }
+        $this->container->displayTo($this->output);
     }
 
     protected function configureDirectoryToServe()
     {
-        if ($this->webContainer->has('DIRECTORY')) {
+        if ($this->container->has('DIRECTORY')) {
             $this->info(
-                sprintf('Serving from the directory "%s"', $this->webContainer->env('DIRECTORY'))
+                sprintf('Serving from the directory "%s"', $this->container->env('DIRECTORY'))
             );
 
-            if (! $this->confirm('Do you want to update the directory to serve?', false)) {
+            if (! $this->confirm('Do you want to update the directory to serve?', 'no')) {
                 return;
             }
         } else {
@@ -75,8 +64,8 @@ class Web extends Command
     protected function confirmUsingDirectory($directory)
     {
         return $this->confirm(sprintf(
-            'The directory "/%s" is present. Would you like to serve from this location? [YES|no]',
+            'The directory "/%s" is present. Would you like to serve from this location?',
             $directory
-        ), true);
+        ), 'yes');
     }
 }

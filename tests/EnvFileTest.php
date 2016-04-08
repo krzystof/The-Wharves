@@ -17,18 +17,6 @@ class EnvFileTest extends \PHPUnit_Framework_TestCase
         $this->envFile = new EnvFile('.env', $this->fileSystem);
     }
 
-    function tearDown()
-    {
-        if (file_exists('stubs/.savedFile')) {
-            unlink('stubs/.savedFile');
-        }
-
-        if (file_exists('.wharf/env')) {
-            unlink('.wharf/env');
-            rmdir('.wharf');
-        }
-    }
-
     /** @test */
     function it_loads_the_value_in_the_given_file()
     {

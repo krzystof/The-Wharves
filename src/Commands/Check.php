@@ -6,7 +6,7 @@ use Wharf\Processes\DockerVersion;
 use Wharf\Exceptions\EnvironmentNotReady;
 use Wharf\Processes\DockerComposeVersion;
 
-class CheckRequirements extends Command
+class Check extends Command
 {
     protected $name = 'check';
 
@@ -21,12 +21,16 @@ class CheckRequirements extends Command
             throw new EnvironmentNotReady($process->getErrorOutput());
         }
 
+        // TODO display here the version used
+
         $dockerComposeVersion = new DockerComposeVersion;
         $dockerComposeVersion->run();
 
         if (!$dockerComposeVersion->isSuccessful()) {
             throw new EnvironmentNotReady($process->getErrorOutput());
         }
+
+        // TODO display here the version used
 
         $this->info('Docker and docker-compose are installed. Everything is good to go.');
     }

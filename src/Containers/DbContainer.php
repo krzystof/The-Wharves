@@ -4,24 +4,23 @@ namespace Wharf\Containers;
 
 class DbContainer extends Container
 {
-    const SERVICE = 'db';
+    // public static function supportedImages()
+    // {
+    //     return collect(['mysql', 'postgres']);
+    // }
 
-    public static function supports($software)
+    public static function service()
     {
-        return collect(['mysql', 'postgres'])->contains($software);
+        return 'db';
     }
 
-    public static function software($software)
+    protected function configurables()
     {
-        if (! static::supports($software)) {
-            throw new \Exception(sprintf('%s is not supported.', $software));
-        }
-
-        return new static;
+        return collect(['DB_USERNAME']);
     }
 
-   protected function configurables()
-   {
-       return collect(['DB_HOST', 'DB_USERNAME']);
-   }
+    protected function requiredSettings()
+    {
+        return collect(['DB_USERNAME' => 'wharf_user']);
+    }
 }

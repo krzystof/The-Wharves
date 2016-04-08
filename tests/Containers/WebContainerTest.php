@@ -3,17 +3,19 @@
 namespace WharfTest\Containers;
 
 use Wharf\Project\Config;
-use Wharf\Containers\Container;
-use Wharf\Containers\WebContainer;
+use Wharf\Containers\Image;
+use Wharf\Containers\WharfContainers;
 use Symfony\Component\Console\Output\BufferedOutput;
 
 class WebContainerTest extends \PHPUnit_Framework_TestCase
 {
     /** @test */
-    function it_should_display_that_it_is_new()
+    function it_should_display_that_infos_on_new_containers()
     {
         $output = new BufferedOutput;
-        Container::web()->displayTo($output);
+
+        WharfContainers::web()->displayTo($output);
+
         $infos = $output->fetch();
 
         $this->assertContains('About: web container (NEW)', $infos);
@@ -23,7 +25,7 @@ class WebContainerTest extends \PHPUnit_Framework_TestCase
 
     function setUp()
     {
-        $this->webContainer = Container::web(['image' => 'nginx:5.1']);
+        $this->webContainer = WharfContainers::web(['image' => 'nginx:1.8.1']);
 
         $this->output = new BufferedOutput;
 
@@ -33,13 +35,13 @@ class WebContainerTest extends \PHPUnit_Framework_TestCase
     }
 
     /** @test */
-    function it_should_display_that_it_is_saved()
+    function it_should_display_that_it_is_an_existing_container()
     {
         $this->assertContains('About: web container (SAVED)', $this->infos);
     }
 
     /** @test */
-    function it_should_display_that_it_has_changed()
+    function it_should_display_that_it_has_changed_when_updated()
     {
         $this->webContainer->environmentFrom([]);
 
@@ -47,7 +49,7 @@ class WebContainerTest extends \PHPUnit_Framework_TestCase
 
         $this->infos = $this->output->fetch();
 
-        $this->assertContains('About: web container (CHANGED)', $this->infos);
+        $this->assertContains('About: web container (UPDATED)', $this->infos);
     }
 
     /** @test */
@@ -60,7 +62,7 @@ class WebContainerTest extends \PHPUnit_Framework_TestCase
     }
 
     /** @test */
-    function it_should_be_configurable()
+    function it_should_be_configurable_additional_settings()
     {
         $this->webContainer->environmentFrom(['APP_URL' => 'something.dev']);
 
@@ -69,6 +71,15 @@ class WebContainerTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('something.dev', $this->webContainer->env('APP_URL'));
         $this->assertEquals('web', $this->webContainer->env('DIRECTORY'));
     }
+
+   /** @test */
+   function it_should_see_that_env_variables_are_set()
+   {
+       $this->webContainer->environmentFrom(['APP_URL' => 'something.dev']);
+
+       $this->assertTrue($this->webContainer->has('APP_URL'));
+       $this->assertFalse($this->webContainer->has('DIRECTORY'));
+   }
 
     /** @test */
     function it_should_overwrite_setting_but_keep_others()
@@ -87,17 +98,8 @@ class WebContainerTest extends \PHPUnit_Framework_TestCase
         $this->webContainer->configure(['RANDOM_SHIT' => 'eat_that']);
 
         $this->assertFalse($this->webContainer->has('RANDOM_SHIT'));
-        $this->assertEquals('', $this->webContainer->env('RANDOM_SHIT'));
+        $this->assertEquals(null, $this->webContainer->env('RANDOM_SHIT'));
     }
-
-   /** @test */
-   function it_should_see_that_env_variables_are_set()
-   {
-       $this->webContainer->environmentFrom(['APP_URL' => 'something.dev']);
-
-       $this->assertTrue($this->webContainer->has('APP_URL'));
-       $this->assertFalse($this->webContainer->has('DIRECTORY'));
-   }
 
     /** @test */
     function it_should_replace_env_variable_and_keep_existing_one()
@@ -124,29 +126,39 @@ class WebContainerTest extends \PHPUnit_Framework_TestCase
     /** @test */
     function it_should_display_its_version()
     {
-        $this->assertContains('Version: 5.1', $this->infos);
+        $this->assertContains('Version: 1.8.1', $this->infos);
     }
 
     /** @test */
     function it_should_display_unset_app_url()
     {
-        $this->markTestIncomplete();
-
-        $this->assertContains($this->infos, 'App url: not set');
+        $this->assertContains("APP_URL:\tnot_set", $this->infos);
     }
 
     /** @test */
     function it_should_display_an_unset_directory_to_serve()
     {
-        $this->markTestIncomplete();
+        $this->assertContains("DIRECTORY:\tnot_set", $this->infos);
+    }
 
-        $this->assertContains($this->infos, 'Directory: not set');
+    /** @test */
+    function it_should_display_its_configuration()
+    {
+        $this->webContainer->configure(['APP_URL' => 'someurl']);
+        $this->webContainer->configure(['DIRECTORY' => 'somedir']);
+
+        $this->webContainer->displayTo($this->output);
+        $this->infos = $this->output->fetch();
+
+        $this->assertContains('Config: OK', $this->infos);
+        $this->assertContains("APP_URL:\tsomeurl", $this->infos);
+        // $this->assertContains('DIRECTORY: somedir', $this->infos);
     }
 
     /** @test */
     function it_should_returns_an_empty_string_for_an_unset_variable()
     {
-        $this->assertEquals('', $this->webContainer->env('db_user'));
+        $this->assertEquals('not_set', $this->webContainer->env('DIRECTORY'));
     }
 
     /** @test */
@@ -157,6 +169,20 @@ class WebContainerTest extends \PHPUnit_Framework_TestCase
         $this->webContainer->environmentFrom($config);
 
         $this->assertEquals('yes', $this->webContainer->env('APP_URL'));
-        $this->assertEquals('', $this->webContainer->env('DB_USER'));
+        $this->assertEquals(null, $this->webContainer->env('DB_USER'));
+    }
+
+    /** @test */
+    function it_should_set_an_image()
+    {
+        $container = WharfContainers::web()->image('nginx');
+
+        $this->assertInstanceOf(Image::class, $container->image());
+    }
+
+    /** @test @expectedException Exception */
+    function it_should_not_set_an_image_for_a_different_service()
+    {
+        WharfContainers::web()->image('mysql');
     }
 }
