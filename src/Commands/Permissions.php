@@ -10,14 +10,19 @@ class Permissions extends Command
 
     public function handle()
     {
-        // list all current writable folders for docker (777)
-        $this->displayCurrentWritableDirectories();
+        $this->project->type()->requiredWritableDirectories()->each(function ($directory) {
+            $this->project->isWritableByAll($directory)
+                ? $this->info(sprintf('The directory "%s" is writable.', $directory))
+                : $this->error(sprintf('The directory "%s" is not writable.', $directory));
+        });
 
-        // foreach of the directories that requires write access, display if it is ok or not
+        if ($this->project->invalidPermissions() && ! $this->confirm('Wharf will change the permissions required on the directories.', 'no')) {
+            $this->abort();
+        }
 
-        // if there were some directories locked and the user confirm, chmod
+        $this->project->updatePermissions();
 
-        // info all good
+        $this->info('The permissions have been updated on your project filesystem.');
     }
 
     private function displayCurrentWritableDirectories()
@@ -28,7 +33,7 @@ class Permissions extends Command
             return $this->comment('No directories are writable');
         }
 
-        $this->comment('Current writable directories:');
+        $this->comment('Current writable directories to docker:');
 
         $this->project->writableDirectories()->each(function ($directory) {
             $this->comment($directory['path']);

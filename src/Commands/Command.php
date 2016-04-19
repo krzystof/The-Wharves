@@ -35,7 +35,7 @@ abstract class Command extends SymfonyCommand
     {
         $this->project = $input->getArgument('project') !== null
                        ? $input->getArgument('project')
-                       : Project::onCurrentDirectory();
+                       : Project::onDirectory(getcwd());
     }
 
     public function execute(InputInterface $input, OutputInterface $output)

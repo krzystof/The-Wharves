@@ -3,18 +3,17 @@
 namespace WharfTests;
 
 use Wharf\Project\EnvFile;
-use League\Flysystem\Filesystem;
-use League\Flysystem\Memory\MemoryAdapter;
+use WharfTests\Doubles\InMemoryFilesystem;
 
 class EnvFileTest extends \PHPUnit_Framework_TestCase
 {
     function setUp()
     {
-        $this->fileSystem = new Filesystem(new MemoryAdapter);
+        $this->filesystem = new InMemoryFilesystem;
 
-        $this->fileSystem->put('.env', "# WHARF SETTINGS \n DATABASE_HOST=db");
+        $this->filesystem->put('.env', "# WHARF SETTINGS \n DATABASE_HOST=db");
 
-        $this->envFile = new EnvFile('.env', $this->fileSystem);
+        $this->envFile = new EnvFile('.env', $this->filesystem);
     }
 
     /** @test */
@@ -32,7 +31,7 @@ class EnvFileTest extends \PHPUnit_Framework_TestCase
     /** @test */
     function it_loads_an_empty_file_it_does_not_exist()
     {
-        $envFile = new EnvFile('.noFile', $this->fileSystem);
+        $envFile = new EnvFile('.noFile', $this->filesystem);
 
         $this->assertCount(0, $envFile);
     }

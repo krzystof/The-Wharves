@@ -25,6 +25,7 @@ use Symfony\Component\Console\Application;
 $app = new Application('Wharf', '0.1');
 
 $app->add(new Wharf\Commands\Check);
+$app->add(new Wharf\Commands\Code);
 $app->add(new Wharf\Commands\Web);
 $app->add(new Wharf\Commands\Php);
 $app->add(new Wharf\Commands\Db);

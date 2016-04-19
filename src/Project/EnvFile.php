@@ -12,15 +12,14 @@ class EnvFile extends Config
 
     public function __construct($filePath = '', $fileSystem = null)
     {
-        if (!$fileSystem || !$fileSystem->has($filePath)) {
+        if (!$fileSystem || !$fileSystem->exists($filePath)) {
             $this->variables = [];
 
             return $this;
         }
 
         $this->filePath = $filePath;
-        $this->content  = $fileSystem->read($this->filePath);
-
+        $this->content  = $fileSystem->get($this->filePath);
         $this->loadContent();
     }
 

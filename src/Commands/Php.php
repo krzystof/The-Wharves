@@ -12,7 +12,7 @@ class Php extends Command
 
     public function handle()
     {
-        $this->container = $this->project->php();
+        $this->container = $this->project->service('php');
 
         $this->displayCurrentContainerAndConfirmUpdate();
 

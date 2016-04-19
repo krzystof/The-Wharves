@@ -16,6 +16,7 @@ class Laravel extends Command
              ->runCommand('php')
              ->runCommand('web')
              ->runCommand('db')
+             ->runCommand('code')
              ->runCommand('permissions');
 
         $this->info('All done!');

@@ -8,11 +8,10 @@ class WritableDirectoriesTest extends \PHPUnit_Framework_TestCase
     // * @test
     function it_should_returns_laravel_required_writable_dirs()
     {
-        $laravelProject = $this->dummyLaravelProject();
-
         $directories = WritableDirectories::project($laravelProject);
 
         $this->assertContains('storage', $directories);
+        $this->assertContains('bootstrap/cache', $directories);
     }
 
     private function dummyLaravelProject()

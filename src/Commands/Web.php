@@ -10,7 +10,7 @@ class Web extends Command
 
     public function handle()
     {
-        $this->container = $this->project->web();
+        $this->container = $this->project->service('web');
 
         $this->displayCurrentContainerAndConfirmUpdate();
 
@@ -29,7 +29,6 @@ class Web extends Command
         $this->container->configure(['DIRECTORY' => $directory]);
 
         $this->checkContainerInvalidOptions();
-
 
         $this->project->save($this->container);
 

@@ -5,10 +5,13 @@ namespace Wharf;
 use Exception;
 use Wharf\Containers\Container;
 use Illuminate\Support\Collection;
+use Symfony\Component\Yaml\Dumper;
 use Wharf\Containers\WharfContainers;
 
 class DockerComposeYml
 {
+    const INDENTATION_DEPTH = 4;
+
     private $containers;
 
     public function __construct($parsedFile = [])
@@ -32,9 +35,9 @@ class DockerComposeYml
         }
     }
 
-    public function setContainer($service, $container)
+    public function setContainer($container)
     {
-        $this->containers[$service] = $container;
+        $this->containers[$container->service()] = $container;
     }
 
     public function content()
@@ -42,10 +45,19 @@ class DockerComposeYml
         return $this->containers->toArray();
     }
 
-    public function savedAllContainers()
+    private function hasSavedAllContainers()
     {
         foreach ($this->containers as $container) {
             $container->saved();
         }
+    }
+
+    public function saveInFiles($filesystem)
+    {
+        $yaml = (new Dumper)->dump($this->content(), self::INDENTATION_DEPTH);
+
+        $filesystem->put('docker-compose.yml', $yaml);
+
+        $this->hasSavedAllContainers();
     }
 }

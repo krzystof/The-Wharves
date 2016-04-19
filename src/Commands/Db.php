@@ -14,7 +14,7 @@ class Db extends Command
 
     public function handle()
     {
-        $this->container = $this->project->db();
+        $this->container = $this->project->service('db');
 
         $this->displayCurrentContainerAndConfirmUpdate()
              ->sourceEnvironment();
