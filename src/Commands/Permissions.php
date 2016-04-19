@@ -16,9 +16,7 @@ class Permissions extends Command
                 : $this->error(sprintf('The directory "%s" is not writable.', $directory));
         });
 
-        if ($this->project->invalidPermissions() && ! $this->confirm('Wharf will change the permissions required on the directories.', 'no')) {
-            $this->abort();
-        }
+        $this->confirmPermissionsUpdate();
 
         $this->project->updatePermissions();
 
@@ -38,5 +36,13 @@ class Permissions extends Command
         $this->project->writableDirectories()->each(function ($directory) {
             $this->comment($directory['path']);
         });
+    }
+
+    private function confirmPermissionsUpdate()
+    {
+        if ($this->project->invalidPermissions()
+            && ! $this->confirm('Wharf will change the permissions required on the directories.', 'no')) {
+            $this->abort();
+        }
     }
 }

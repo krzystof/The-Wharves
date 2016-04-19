@@ -1,0 +1,15 @@
+parameters:
+    bin_dir: "./vendor/bin"
+    git_dir: "."
+    stop_on_failure: true
+    ascii:
+        failed: grumphp-grumpy.txt
+        succeeded: grumphp-happy.txt
+    tasks:
+        phpcs:
+            standard: PSR2
+            ignore_patterns:
+                - Test
+        phpunit: ~
+        yamllint: ~
+    extensions: []
