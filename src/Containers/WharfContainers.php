@@ -17,7 +17,8 @@ class WharfContainers
             case 'db':
                 return DbContainer::fromConfig($config);
             default:
-                throw new ContainerNotSupported(sprintf('The container "%s" is not supported', $container));
+                return new EmptyContainer;
+                // throw new ContainerNotSupported(sprintf('The container "%s" is not supported', $container));
         }
     }
 

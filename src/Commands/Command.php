@@ -4,6 +4,7 @@ namespace Wharf\Commands;
 
 use Wharf\Project;
 use Wharf\Commands\Exceptions\CommandAborted;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Question\Question;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -19,11 +20,18 @@ abstract class Command extends SymfonyCommand
     public function configure()
     {
         $this->setName($this->name)
-             ->setDescription($this->description)
-             ->addArgument(
-                 'project',
-                 InputArgument::OPTIONAL
-             );
+             ->setDescription($this->description);
+
+        if (isset($this->optionFlags)) {
+            foreach ($this->optionFlags as $name => $description) {
+                $this->addOption(
+                    $name,
+                    null,
+                    InputOption::VALUE_NONE,
+                    $description
+                );
+            }
+        }
     }
 
     public function initialize()
@@ -33,8 +41,8 @@ abstract class Command extends SymfonyCommand
 
     protected function interact(InputInterface $input, OutputInterface $output)
     {
-        $this->project = $input->getArgument('project') !== null
-                       ? $input->getArgument('project')
+        $this->project = isset($this->project)
+                       ? $this->project
                        : Project::onDirectory(getcwd());
     }
 
@@ -111,11 +119,11 @@ abstract class Command extends SymfonyCommand
         throw new CommandAborted($message);
     }
 
-    protected function runCommand($name)
+    protected function runCommandOnProject($name)
     {
         $command = $this->getApplication()->find($name);
 
-        $this->input->setArgument('project', $this->project);
+        $command->onProject($this->project);
 
         try {
             $command->run($this->input, $this->output);
@@ -124,6 +132,11 @@ abstract class Command extends SymfonyCommand
         }
 
         return $this;
+    }
+
+    private function onProject($project)
+    {
+        $this->project = $project;
     }
 
     protected function lineBreak()

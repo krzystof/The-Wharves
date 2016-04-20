@@ -146,7 +146,14 @@ abstract class Container implements Arrayable
             ));
         }
 
-        return $this->config->toArray();
+        return $this->config->sortBy(function ($value, $option) {
+            return $this->orderOfOption($option);
+        })->toArray();
+    }
+
+    private function orderOfOption($option)
+    {
+        return collect(['image', 'environment'])->search($option);
     }
 
     protected function isValid()

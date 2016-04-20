@@ -1,18 +1,24 @@
-## Wharf
+## Wharf... is Coming Soon.
 
-TODO
-- [ ] permission command.
+### Beta soon...
 
-### Package in development. Come back later to check it out!
-Build a development environment for your PHP app in a blink.
+Wharf is just a php command line app that will set up a docker-compose.yml file in a sec using images in docker hub's Wharf namespace. In fact, it is a wrapper around a wrapper around a... you know. I just wanted a quick way to build my dev environment, without looking in older projects to find out how I did it last time.
 
-### Commands
-- [ ] `wharf laravel` will initialise a dev environment for an existing laravel app. All the containers will be created with values from your env file. If it is not present, it will use some default settings.
-- [ ] `wharf init` will check that you have the required docker set up, then it will prompt for informations about your project.
-When this is done, just run `docker-compose up` and you are good to go.
-- [ ] `wharf php` to change the php version
-- [ ] `wharf db` to change the database system and/or version
+Wharf aim to provide a fast way to set up a development environment using docker and docker-compose. By using a docker-compose.yml in each project, we can set up a configuration that will be isolated (software, versions, other goodies...) from one project to another. Makes it also pretty easy to work in a team and to share the same configuration.
 
-### Supported Services and Images
-- [ ] php 5.4, 5.5, 5.6, 7.0
-- [ ] db mysql, mariadb, postresql, sqlite
+### What is left to do for the beta?
+
+I need a command to list all available images.
+I need to start building all the images in docker hub, and update Wharf's containers settings in the same time.
+I need to write doc.
+I need to record a couple of gif.
+I need to do a static website for the doc.
+
+### What next for v1?
+
+I need to add some goodies commands.
+I need to add reddis, and some others.
+
+### Thinking about
+
+A ruby dev env

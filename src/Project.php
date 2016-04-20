@@ -67,11 +67,6 @@ class Project
         return $this->envFile instanceof EnvFile;
     }
 
-    private function projectDir()
-    {
-        return $this->filesystem;
-    }
-
     private function loadEnvFile()
     {
         return $this->envFile = new EnvFile($this->envFile, $this->filesystem);
@@ -95,7 +90,7 @@ class Project
 
     private function project($filepath = '')
     {
-        return $this->projectRoot.'/'.$filepath;
+        return $this->projectRoot.DIRECTORY_SEPARATOR.$filepath;
     }
 
     public function save($container = null)
@@ -105,12 +100,6 @@ class Project
         }
 
         $this->dockerComposeFile->saveInFiles($this->filesystem);
-
-        // $yaml = (new Dumper)->dump($this->dockerComposeFile->content(), DockerComposeYml::INDENTATION_DEPTH);
-
-        // $this->filesystem->put('docker-compose.yml', $yaml);
-
-        // $this->dockerComposeFile->savedAllContainers();
     }
 
     public function dbIsLocalhost()

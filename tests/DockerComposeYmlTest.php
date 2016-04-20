@@ -2,9 +2,10 @@
 
 namespace WharfTest;
 
+use Wharf\DockerComposeYml;
 use Wharf\Containers\Container;
 use Symfony\Component\Yaml\Yaml;
-use Wharf\DockerComposeYml;
+use Wharf\Containers\EmptyContainer;
 
 class DockerComposeYmlTest extends \PHPUnit_Framework_TestCase
 {
@@ -24,12 +25,14 @@ class DockerComposeYmlTest extends \PHPUnit_Framework_TestCase
         return Yaml::parse(file_get_contents(dirname(__DIR__).'/stubs/docker-compose-v1.yml'));
     }
 
-    /** @test @expectedException Exception */
-    function it_throws_an_exception_if_the_container_is_invalid()
+    /** @test */
+    function it_returns_an_empty_container_if_it_does_not_exists()
     {
         $dockerComposeYml = new DockerComposeYml($this->getStubbedFile());
 
-        $dockerComposeYml->container('invalid');
+        $container = $dockerComposeYml->container('invalid');
+
+        $this->assertInstanceOf(EmptyContainer::class, $container);
     }
 
     /** @test */

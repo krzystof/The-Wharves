@@ -30,6 +30,6 @@ $app->add(new Wharf\Commands\Web);
 $app->add(new Wharf\Commands\Php);
 $app->add(new Wharf\Commands\Db);
 $app->add(new Wharf\Commands\Permissions);
-$app->add(new Wharf\Commands\Laravel);
+$app->add(new Wharf\Commands\Init);
 
 $app->run();

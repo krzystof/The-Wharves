@@ -138,12 +138,6 @@ class ProjectTest extends \PHPUnit_Framework_TestCase
     }
 
     /** @test */
-    function it_should_return_the_web_container()
-    {
-        $this->assertInstanceOf(WebContainer::class, $this->project->service('web'));
-    }
-
-    /** @test */
     function it_should_return_a_new_web_container_if_it_does_not_exist()
     {
         $webContainer = $this->project->service('web');

@@ -6,13 +6,15 @@ use Illuminate\Contracts\Support\Arrayable;
 
 class Image implements Arrayable
 {
+    const NOT_SET = 'not_set';
+
     protected $name;
     protected $tag;
 
     protected function __construct($service = null, $name = null, $tag = null)
     {
-        $this->service = $service ?: 'not_set';
-        $this->name    = $name ?: 'not_set';
+        $this->service = $service ?: self::NOT_SET;
+        $this->name    = $name    ?: self::NOT_SET;
         $this->tag     = $tag && $tag !== 'latest' ? $tag : $this->latest();
 
         $this->validateImage();
@@ -111,9 +113,9 @@ class Image implements Arrayable
         return collect([
             'web'     => ['nginx' => ['1.8.1']],
             'php'     => ['php' => ['7.0', '5.6']],
-            'db'      => ['postgres' => '1.0.0', 'mysql' => '5.7'],
+            'db'      => ['mysql' => '5.7', 'postgres' => '1.0.0' ],
             'code'    => ['code' => 'latest'],
-            'not_set' => ['not_set' => 'not_set'],
+            'not_set' => ['not_set' => self::NOT_SET],
         ]);
     }
 
@@ -124,7 +126,7 @@ class Image implements Arrayable
 
     public function exists()
     {
-        return $this->name !== 'not_set' && $this->tag !== 'not_set';
+        return $this->name !== self::NOT_SET && $this->tag !== self::NOT_SET;
     }
 
     public function versionTo($version)

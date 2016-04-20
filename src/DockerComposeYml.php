@@ -6,7 +6,9 @@ use Exception;
 use Wharf\Containers\Container;
 use Illuminate\Support\Collection;
 use Symfony\Component\Yaml\Dumper;
+use Wharf\Containers\EmptyContainer;
 use Wharf\Containers\WharfContainers;
+use Wharf\Containers\ContainerDoesNotExist;
 
 class DockerComposeYml
 {
@@ -40,9 +42,16 @@ class DockerComposeYml
         $this->containers[$container->service()] = $container;
     }
 
-    public function content()
+    private function content()
     {
-        return $this->containers->toArray();
+        return $this->containers->sortBy(function ($container) {
+            return $this->orderOfService($container->service());
+        })->toArray();
+    }
+
+    private function orderOfService($service)
+    {
+        return collect(['code', 'php', 'web', 'db'])->search($service);
     }
 
     private function hasSavedAllContainers()
