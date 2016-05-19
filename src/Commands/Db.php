@@ -8,13 +8,12 @@ use Wharf\Project\Container;
 
 class Db extends Command
 {
-    protected $name = 'db';
-
+    protected $name        = 'db';
     protected $description = 'Change the database system or version of your environment.';
 
     public function handle()
     {
-        $this->container = $this->project->service('db');
+        $this->setContainerForService('db');
 
         $this->displayCurrentContainerAndConfirmUpdate()
              ->sourceEnvironment();
@@ -34,7 +33,7 @@ class Db extends Command
             $this->container->image()->name()
         );
 
-        $image = Image::make('db:'.$database);
+        $image = Image::make('db', $database);
 
         $version = $this->choose(
             'Select the version to use:',

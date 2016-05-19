@@ -4,18 +4,28 @@ namespace Wharf\Containers;
 
 class WebContainer extends Container
 {
-    protected $name = 'Web Container';
+    // protected $name = 'Web Container';
 
-    protected $config;
+    // protected $config;
 
-    public static function supportedImages()
-    {
-        return collect(['nginx']);
-    }
+    // public static function supportedImages()
+    // {
+    //     return collect(['nginx']);
+    // }
 
-    public static function service()
+    public function service()
     {
         return 'web';
+    }
+
+    protected function defaultSettings()
+    {
+        return collect([
+            'env_file'     => '.env',
+            'ports'        => ['80:80'],
+            'links'        => ['php'],
+            'volumes_from' => ['code'],
+        ]);
     }
 
     protected function configurables()

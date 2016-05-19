@@ -1,8 +1,9 @@
-FROM nginx:latest
+FROM nginx:1.8.1-alpine
+MAINTAINER Christophe Graniczny <christophe@getintouch.com>
+COPY wharf.template /etc/nginx/conf.d/wharf.template
 
-MAINTAINER Christophe Graniczny
+RUN nginx -g 'daemon off;'
 
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-RUN mkdir /etc/nginx/sites
-VOLUME ["/etc/nginx/sites"]
+CMD cp /etc/nginx/conf.d/wharf.template /etc/nginx/conf.d/default.conf && \
+    sed -i "s/\$DIRECTORY/$DIRECTORY/" /etc/nginx/conf.d/default.conf
+#    nginx -g 'daemon off;'

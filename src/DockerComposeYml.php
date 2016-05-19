@@ -16,24 +16,24 @@ class DockerComposeYml
 
     private $containers;
 
-    public function __construct($parsedFile = [])
+    public function __construct($parsedFile = [], $envFile = [])
     {
-        $this->loadContainers($parsedFile);
+        $this->loadContainers($parsedFile, $envFile);
     }
 
-    public function container($name)
+    public function container($name, $envFile = null)
     {
         return $this->containers->has($name)
              ? $this->containers->get($name)
-             : WharfContainers::$name([]);
+             : WharfContainers::make($name, [], $envFile);
     }
 
-    private function loadContainers($parsedFile)
+    private function loadContainers($parsedFile, $envFile)
     {
         $this->containers = new Collection;
 
         foreach ($parsedFile as $name => $config) {
-            $this->containers->put($name, WharfContainers::$name($config));
+            $this->containers->put($name, WharfContainers::make($name, $config, $envFile));
         }
     }
 
@@ -61,12 +61,21 @@ class DockerComposeYml
         }
     }
 
-    public function saveInFiles($filesystem)
+    public function saveInFile($filesystem)
     {
         $yaml = (new Dumper)->dump($this->content(), self::INDENTATION_DEPTH);
 
         $filesystem->put('docker-compose.yml', $yaml);
 
         $this->hasSavedAllContainers();
+    }
+
+    public function removeContainer($serviceToDelete)
+    {
+        $this->containers = $this->containers->filter(function ($container) use ($serviceToDelete) {
+            return $container->service() !== $serviceToDelete;
+        });
+
+        return $this;
     }
 }

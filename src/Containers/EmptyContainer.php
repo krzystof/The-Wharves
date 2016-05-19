@@ -2,21 +2,29 @@
 
 namespace Wharf\Containers;
 
+use Illuminate\Support\Collection;
+
 class EmptyContainer extends Container
 {
-    public function __construct()
+    public function __construct($name)
     {
+        $this->service = $name;
         $this->config = collect([]);
     }
 
-    public static function service()
+    public function service()
     {
-        return '';
+        return $this->name;
     }
 
     protected function configurables()
     {
         return collect([]);
+    }
+
+    protected function defaultSettings()
+    {
+        return new Collection;
     }
 
     protected function requiredSettings()
@@ -26,6 +34,6 @@ class EmptyContainer extends Container
 
     public function isValid()
     {
-        return true;
+        return false;
     }
 }

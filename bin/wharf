@@ -24,12 +24,31 @@ use Symfony\Component\Console\Application;
 
 $app = new Application('Wharf', '0.1');
 
-$app->add(new Wharf\Commands\Check);
-$app->add(new Wharf\Commands\Code);
-$app->add(new Wharf\Commands\Web);
-$app->add(new Wharf\Commands\Php);
-$app->add(new Wharf\Commands\Db);
-$app->add(new Wharf\Commands\Permissions);
-$app->add(new Wharf\Commands\Init);
+$commands = [
+    Wharf\Commands\Check::class,
+    Wharf\Commands\Code::class,
+    Wharf\Commands\Web::class,
+    Wharf\Commands\Php::class,
+    Wharf\Commands\Cli::class,
+    Wharf\Commands\Db::class,
+    Wharf\Commands\Permissions::class,
+    Wharf\Commands\Init::class,
+    Wharf\Commands\Destroy::class,
+    Wharf\Commands\Ls::class,
+];
+
+foreach ($commands as $command) {
+    $app->add(new $command);
+}
+
+// $app->add(new Wharf\Commands\Check);
+// $app->add(new Wharf\Commands\Code);
+// $app->add(new Wharf\Commands\Web);
+// $app->add(new Wharf\Commands\Php);
+// $app->add(new Wharf\Commands\Db);
+// $app->add(new Wharf\Commands\Permissions);
+// $app->add(new Wharf\Commands\Init);
+// $app->add(new Wharf\Commands\Destroy);
+// $app->add(new Wharf\Commands\Ls);
 
 $app->run();

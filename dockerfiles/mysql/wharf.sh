@@ -1,0 +1,5 @@
+MYSQL_DATABASE=$DB_DATABASE
+MYSQL_USER=$DB_USERNAME
+MYSQL_PASSWORD=$DB_PASSWORD
+
+./usr/local/bin/docker-entrypoint.sh

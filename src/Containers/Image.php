@@ -8,27 +8,47 @@ class Image implements Arrayable
 {
     const NOT_SET = 'not_set';
 
-    protected $name;
-    protected $tag;
+    private static $images = [
+        'web'     => [
+            'wharf/nginx' => ['1.8.1']
+        ],
+        'php'     => [
+            'wharf/php' => ['7.0.5', '5.6']
+        ],
+        'db'      => [
+            'wharf/mysql' => '5.7.12',
+            'postgres' => '1.0.0'
+        ],
+        'code'    => ['wharf/code' => 'latest'],
+        'not_set' => ['not_set' => self::NOT_SET],
+    ];
 
-    protected function __construct($service = null, $name = null, $tag = null)
+    private $name;
+    private $tag;
+    private $is_custom = false;
+
+    private function __construct($service = null, $name = null, $tag = null)
     {
         $this->service = $service ?: self::NOT_SET;
         $this->name    = $name    ?: self::NOT_SET;
-        $this->tag     = $tag && $tag !== 'latest' ? $tag : $this->latest();
+        $this->tag     = $tag ?: $this->latest();
 
         $this->validateImage();
     }
 
-    public static function make($string)
+    public static function make($service, $string)
     {
         $parts = explode(':', $string);
 
-        $service = isset($parts[0]) ? $parts[0] : null;
-        $name    = isset($parts[1]) ? $parts[1] : null;
-        $tag     = isset($parts[2]) ? $parts[2] : null;
+        $name    = isset($parts[0]) ? $parts[0] : null;
+        $tag     = isset($parts[1]) ? $parts[1] : null;
 
         return new static($service, $name, $tag);
+    }
+
+    public static function makeFor($container)
+    {
+        return static::make($container->service(), $container->config()->get('image'));
     }
 
     public static function show($search)
@@ -56,20 +76,23 @@ class Image implements Arrayable
         return $this->name.':'.$this->tag;
     }
 
-    protected function validateImage()
+    private function isWharfImage()
+    {
+        return strpos($this->name, 'wharf/') === 0;
+    }
+
+    private function validateImage()
     {
         if (! $this->availableServices()->contains($this->service)) {
             throw new InvalidImage(sprintf('The service "%s" is not valid', $this->service));
         }
 
-        if (! $this->availableImages()->contains($this->name)) {
-            $errorMessage = sprintf(
-                'The image "%s" is not supported for the service %s',
-                $this->name,
-                $this->service
-            );
+        if ($this->isWharfImage() && ! $this->availableImages()->contains($this->name)) {
+            throw new InvalidImage(sprintf('The wharf image "%s" does not exist.', $this->name));
+        }
 
-            throw new InvalidImage($errorMessage);
+        if (! $this->availableImages()->contains($this->name)) {
+            return $this->is_custom = true;
         }
 
         if (! $this->availableTags()->contains($this->tag)) {
@@ -83,22 +106,22 @@ class Image implements Arrayable
         }
     }
 
-    protected function latest()
+    private function latest()
     {
         return $this->availableTags()->last();
     }
 
-    protected function availableServices()
+    private function availableServices()
     {
         return $this->images()->keys();
     }
 
-    protected function findService()
+    private function findService()
     {
         return collect($this->images()->get($this->service));
     }
 
-    protected function availableImages()
+    private function availableImages()
     {
         return $this->findService()->keys();
     }
@@ -108,15 +131,9 @@ class Image implements Arrayable
         return collect($this->findService()->get($this->name));
     }
 
-    protected function images()
+    private function images()
     {
-        return collect([
-            'web'     => ['nginx' => ['1.8.1']],
-            'php'     => ['php' => ['7.0', '5.6']],
-            'db'      => ['mysql' => '5.7', 'postgres' => '1.0.0' ],
-            'code'    => ['code' => 'latest'],
-            'not_set' => ['not_set' => self::NOT_SET],
-        ]);
+        return collect(static::$images);
     }
 
     public function toArray()
@@ -143,7 +160,7 @@ class Image implements Arrayable
         return new static($this->service, $this->name, $version);
     }
 
-    protected function sameAs($image)
+    private function sameAs($image)
     {
         return $this->name === $image->name() && $this->tag === $image->tag();
     }
@@ -151,5 +168,17 @@ class Image implements Arrayable
     public function notSameAs($image)
     {
         return ! $this->sameAs($image);
+    }
+
+    public function isCustom()
+    {
+        return $this->is_custom;
+    }
+
+    public static function all()
+    {
+        return collect(static::$images)->filter(function ($image, $service) {
+            return ! in_array($service, ['code', self::NOT_SET]);
+        });
     }
 }

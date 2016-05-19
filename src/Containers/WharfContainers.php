@@ -4,28 +4,19 @@ namespace Wharf\Containers;
 
 class WharfContainers
 {
-    protected static function make($container, $config)
+    public static function make($container, $config = [], $envFile = null)
     {
-        // TODO normalise instantiation
-        switch ($container) {
-            case 'code':
-                return CodeContainer::fromConfig($config);
-            case 'web':
-                return WebContainer::fromConfig($config);
-            case 'php':
-                return PhpContainer::fromConfig($config);
-            case 'db':
-                return DbContainer::fromConfig($config);
-            default:
-                return new EmptyContainer;
-                // throw new ContainerNotSupported(sprintf('The container "%s" is not supported', $container));
-        }
+        $containerName = static::normalize($container);
+
+        return $containerName::fromConfig($config, $envFile);
     }
 
-    public static function __callStatic($method, $args)
+    private static function normalize($containerName)
     {
-        $config = $args ? $args[0] : [];
+        $class = '\\Wharf\Containers\\'.ucfirst($containerName).'Container';
 
-        return static::make($method, $config);
+        return class_exists($class)
+             ? $class
+             : '\\Wharf\Containers\\EmptyContainer';
     }
 }

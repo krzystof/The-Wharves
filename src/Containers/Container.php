@@ -8,34 +8,28 @@ use Illuminate\Contracts\Support\Arrayable;
 abstract class Container implements Arrayable
 {
     protected $config;
-
     protected $updated = false;
+    private $isNew;
 
-    abstract public static function service();
-
+    abstract public function service();
+    abstract protected function defaultSettings();
     abstract protected function configurables();
-
     abstract protected function requiredSettings();
 
-    public static function fromConfig($config)
+    public static function fromConfig($config, $envFile)
     {
-        return new static($config);
+        return new static($config, $envFile);
     }
 
-    protected function __construct($config = [])
+    private function __construct($config = [], $envFile = [])
     {
-        $this->config = collect($config);
+        $this->isNew = count($config) === 0;
 
-        $this->validateImage();
-    }
-
-    protected function validateImage()
-    {
-        if ($this->config->has('image')) {
-            $image = Image::make($this->service().':'.$this->config->get('image'));
-
-            $this->config->put('image', $image);
+        if ($this->defaultSettings()->has('env_file')) {
+            $config['env_file'] = $envFile;
         }
+
+        $this->config = $this->defaultSettings()->merge($config);
     }
 
     public function env($key)
@@ -44,16 +38,39 @@ abstract class Container implements Arrayable
             return null;
         }
 
-        if (! $this->environment()->has($key)) {
+        // if ($key === 'DIRECTORY') {
+        //     dd($key, $this->envFile()->has($key), $this->envFile()->has('APP_ENV'));
+        //     # code...
+        // }
+
+        if ($this->config->has('environment') && $this->config->get('environment')->has($key)) {
+            return $this->environment()->get($key);
+        }
+
+        if (is_null($this->envFile())) {
             return 'not_set';
         }
 
-        return $this->environment()->get($key);
+        if ($this->envFile()->has($key)) {
+            return $this->config->get('env_file')->get($key);
+        }
+
+        return 'not_set';
+    }
+
+    public function config()
+    {
+        return $this->config;
+    }
+
+    private function envFile()
+    {
+        return $this->config->has('env_file') ? $this->config->get('env_file') : new Collection;
     }
 
     public function has($option)
     {
-        return $this->environment()->has($option);
+        return $this->envFile()->has($option) || $this->config()->get('environment')->has($option);
     }
 
     public function environmentFrom($config)
@@ -100,6 +117,9 @@ abstract class Container implements Arrayable
     protected function changed()
     {
         $this->updated = true;
+        $this->isNew = false;
+
+        return $this;
     }
 
     public function saved()
@@ -109,7 +129,7 @@ abstract class Container implements Arrayable
 
     public function isNew()
     {
-        return count($this->config) === 0;
+        return $this->isNew;
     }
 
     public function image($image = false)
@@ -118,18 +138,20 @@ abstract class Container implements Arrayable
             return $this->setImage($image);
         }
 
-        return $this->config->has('image') ? $this->config->get('image') : Image::makeEmpty();
+        if (! $this->config->has('image')) {
+            return Image::makeEmpty();
+        }
+
+        return Image::makeFor($this);
     }
 
-    protected function setImage($image)
+    private function setImage($image)
     {
-        $image = Image::make($this->service().':'.$image);
+        $image = Image::make($this->service(), $image);
 
         $this->config->put('image', $image);
 
-        $this->changed();
-
-        return $this;
+        return $this->changed();
     }
 
     protected function environment()
@@ -153,12 +175,12 @@ abstract class Container implements Arrayable
 
     private function orderOfOption($option)
     {
-        return collect(['image', 'environment'])->search($option);
+        return collect(['image', 'env_file', 'environment'])->search($option);
     }
 
     protected function isValid()
     {
-        return $this->image()->exists() && $this->invalidSettings()->count() === 0;
+        return $this->image()->exists() && $this->invalidSettings()->isEmpty();
     }
 
     protected function invalidSettings()
@@ -183,6 +205,10 @@ abstract class Container implements Arrayable
 
     protected function configState()
     {
+        if ($this->image()->isCustom()) {
+            return '<info>CUSTOM</info>';
+        }
+
         return $this->isValid() ? '<info>OK</info>' : '<error>ERROR</error>';
     }
 
@@ -191,26 +217,19 @@ abstract class Container implements Arrayable
         $output->writeln("\n");
 
         $output->writeln(sprintf(
-            'About: <comment>%s container</comment> (%s)',
+            'About    <comment>%s container</comment> (%s)',
             $this->service(),
             $this->state()
         ));
 
-        $output->writeln(sprintf('Config: %s', $this->configState()));
+        $output->writeln(sprintf("Config   %s", $this->configState()));
+        $output->writeln(sprintf('Image    %s', $this->image()->name()));
+        $output->writeln(sprintf('Version  %s', $this->image()->tag()));
 
-        if ($this->isNew()) {
-            return $output->writeln(sprintf(
-                '%s<error>This container does not exist.</error>%s',
-                "\n",
-                "\n"
-            ));
-        }
-
-        $output->writeln(sprintf('Image: %s', $this->image()->name()));
-        $output->writeln(sprintf('Version: %s', $this->image()->tag()));
+        $output->writeln("\n");
 
         $this->configurables()->each(function ($setting) use ($output) {
-            $output->writeln(sprintf('%s:%s%s', $setting, "\t", $this->env($setting)));
+            $output->writeln(sprintf('%s - %s%s', $setting, ' ', $this->env($setting)));
         });
     }
 }

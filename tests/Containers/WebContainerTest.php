@@ -3,29 +3,16 @@
 namespace WharfTest\Containers;
 
 use Wharf\Project\Config;
+use Wharf\Project\EnvFile;
 use Wharf\Containers\Image;
 use Wharf\Containers\WharfContainers;
 use Symfony\Component\Console\Output\BufferedOutput;
 
 class WebContainerTest extends \PHPUnit_Framework_TestCase
 {
-    /** @test */
-    function it_should_display_that_infos_on_new_containers()
-    {
-        $output = new BufferedOutput;
-
-        WharfContainers::web()->displayTo($output);
-
-        $infos = $output->fetch();
-
-        $this->assertContains('About: web container (NEW)', $infos);
-        $this->assertContains('Config: ERROR', $infos);
-        $this->assertContains('This container does not exist.', $infos);
-    }
-
     function setUp()
     {
-        $this->webContainer = WharfContainers::web(['image' => 'nginx:1.8.1']);
+        $this->webContainer = WharfContainers::make('web', ['image' => 'wharf/nginx:1.8.1'], new Envfile);
 
         $this->output = new BufferedOutput;
 
@@ -34,14 +21,13 @@ class WebContainerTest extends \PHPUnit_Framework_TestCase
         $this->infos = $this->output->fetch();
     }
 
-    /** @test */
-    function it_should_display_that_it_is_an_existing_container()
+    function test_it_should_display_that_it_is_an_existing_container()
     {
-        $this->assertContains('About: web container (SAVED)', $this->infos);
+        $this->assertRegExp('/About\s+web container \(SAVED\)/', $this->infos);
     }
 
     /** @test */
-    function it_should_display_that_it_has_changed_when_updated()
+    function it_should_display_when_it_is_updated()
     {
         $this->webContainer->environmentFrom([]);
 
@@ -49,7 +35,7 @@ class WebContainerTest extends \PHPUnit_Framework_TestCase
 
         $this->infos = $this->output->fetch();
 
-        $this->assertContains('About: web container (UPDATED)', $this->infos);
+        $this->assertRegExp('/About\s+web container \(UPDATED\)/', $this->infos);
     }
 
     /** @test */
@@ -111,48 +97,42 @@ class WebContainerTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('web', $this->webContainer->env('DIRECTORY'));
     }
 
-    /** @test */
-    function it_should_display_that_the_config_is_not_valid()
+    function test_it_should_display_that_the_config_is_not_valid()
     {
-        $this->assertContains('Config: ERROR', $this->infos);
+        $this->assertRegExp('/Config\s+ERROR/', $this->infos);
     }
 
-    /** @test */
-    function it_should_display_its_image()
+    function test_it_should_display_its_image()
     {
-        $this->assertContains('Image: nginx', $this->infos);
+        $this->assertRegExp('/Image\s+wharf\/nginx/', $this->infos);
     }
 
-    /** @test */
-    function it_should_display_its_version()
+    function test_it_should_display_its_version()
     {
-        $this->assertContains('Version: 1.8.1', $this->infos);
+        $this->assertRegExp('/Version\s+1.8.1/', $this->infos);
     }
 
-    /** @test */
-    function it_should_display_unset_app_url()
+    function test_it_should_display_unset_app_url()
     {
-        $this->assertContains("APP_URL:\tnot_set", $this->infos);
+        $this->assertRegExp('/APP_URL[-\s]+not_set/', $this->infos);
     }
 
-    /** @test */
-    function it_should_display_an_unset_directory_to_serve()
+    function test_it_should_display_an_unset_directory_to_serve()
     {
-        $this->assertContains("DIRECTORY:\tnot_set", $this->infos);
+        $this->assertRegExp('/DIRECTORY[-\s]+not_set/', $this->infos);
     }
 
-    /** @test */
-    function it_should_display_its_configuration()
+    function test_it_should_display_its_configuration()
     {
         $this->webContainer->configure(['APP_URL' => 'someurl']);
         $this->webContainer->configure(['DIRECTORY' => 'somedir']);
 
         $this->webContainer->displayTo($this->output);
-        $this->infos = $this->output->fetch();
 
-        $this->assertContains('Config: OK', $this->infos);
-        $this->assertContains("APP_URL:\tsomeurl", $this->infos);
-        // $this->assertContains('DIRECTORY: somedir', $this->infos);
+        $infos = $this->output->fetch();
+
+        $this->assertRegExp('/Config[-\s]+OK/', $infos);
+        $this->assertRegExp('/APP_URL[-\s]+someurl/', $infos);
     }
 
     /** @test */
@@ -175,14 +155,28 @@ class WebContainerTest extends \PHPUnit_Framework_TestCase
     /** @test */
     function it_should_set_an_image()
     {
-        $container = WharfContainers::web()->image('nginx');
+        $container = WharfContainers::make('web')->image('nginx');
 
         $this->assertInstanceOf(Image::class, $container->image());
     }
 
-    /** @test @expectedException Exception */
-    function it_should_not_set_an_image_for_a_different_service()
+    /** @expectedException Exception */
+    function test_it_should_not_set_a_wharf_image_for_a_different_service()
     {
-        WharfContainers::web()->image('mysql');
+        WharfContainers::make('web')->image('wharf/mysql');
+    }
+
+    function test_it_should_display_if_it_is_a_custom_container()
+    {
+        $image = Image::make('web', 'some_funky_name');
+
+        $this->webContainer->image($image);
+
+        $this->webContainer->displayTo($this->output);
+
+        $infos = $this->output->fetch();
+
+        $this->assertContains('some_funky_name', $infos);
+        $this->assertRegExp('/Config\s+CUSTOM/', $infos);
     }
 }

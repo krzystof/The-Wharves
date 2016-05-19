@@ -35,14 +35,12 @@ class ProjectTest extends \PHPUnit_Framework_TestCase
         unlink('docker-compose.yml');
     }
 
-    /** @test */
-    function it_does_not_create_a_docker_compose_file_if_the_project_is_not_saved()
+    function test_it_does_not_create_a_docker_compose_file_if_the_project_is_not_saved()
     {
         $this->assertFalse($this->filesystem->exists('docker-compose.yml'));
     }
 
-    /** @test */
-    function it_create_a_docker_compose_file_if_the_project_is_saved()
+    function test_it_create_a_docker_compose_file_if_the_project_is_saved()
     {
         $this->project->save();
 
@@ -64,12 +62,13 @@ class ProjectTest extends \PHPUnit_Framework_TestCase
         $this->assertInstanceOf(EnvFile::class, $this->project->envFile());
     }
 
-    /** @test */
-    function it_sees_if_the_env_db_host_is_localhost()
+    function test_it_sees_if_the_env_db_host_is_localhost()
     {
         $this->filesystem->put('.env', 'DB_HOST=localhost');
 
-        $this->assertTrue($this->project->dbIsLocalhost());
+        $project = new Project($this->filesystem, __DIR__);
+
+        $this->assertTrue($project->dbIsLocalhost());
     }
 
     /** @test */
@@ -87,13 +86,12 @@ class ProjectTest extends \PHPUnit_Framework_TestCase
 
         $this->project->setEnvVariable('ANOTHER', 'try');
 
-        $this->assertContains('ANOTHER=try', $this->filesystem->get('.env')->__toString());
+        $this->assertContains('ANOTHER=try', $this->filesystem->get('.env'));
     }
 
-    /** @test */
-    function it_sets_a_db_container()
+    function test_it_sets_a_db_container()
     {
-        $dbContainer = WharfContainers::db(['image' => 'postgres']);
+        $dbContainer = WharfContainers::make('db', ['image' => 'postgres']);
 
         $dbContainer->configure(['DB_USERNAME' => 'some_jerk']);
 
@@ -137,8 +135,7 @@ class ProjectTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('public', $this->project->detectDirectoryToServe());
     }
 
-    /** @test */
-    function it_should_return_a_new_web_container_if_it_does_not_exist()
+    function test_it_should_return_a_new_web_container_if_it_does_not_exist()
     {
         $webContainer = $this->project->service('web');
 
@@ -148,7 +145,7 @@ class ProjectTest extends \PHPUnit_Framework_TestCase
     /** @test @expectedException Exception*/
     function it_should_errors_if_it_saves_an_invalid_container()
     {
-        $incompleteContainer = WharfContainers::web()->image('nginx');
+        $incompleteContainer = WharfContainers::make('web')->image('nginx');
 
         $this->project->save($incompleteContainer);
     }

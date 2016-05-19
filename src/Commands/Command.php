@@ -22,14 +22,24 @@ abstract class Command extends SymfonyCommand
         $this->setName($this->name)
              ->setDescription($this->description);
 
+        $this->bootArguments();
+        $this->bootOptionFlag();
+    }
+
+    private function bootArguments()
+    {
+        if (isset($this->arguments)) {
+            foreach ($this->arguments as $name => $description) {
+                $this->addArgument($name, InputArgument::REQUIRED, $description);
+            }
+        }
+    }
+
+    private function bootOptionFlag()
+    {
         if (isset($this->optionFlags)) {
             foreach ($this->optionFlags as $name => $description) {
-                $this->addOption(
-                    $name,
-                    null,
-                    InputOption::VALUE_NONE,
-                    $description
-                );
+                $this->addOption($name, null, InputOption::VALUE_NONE, $description);
             }
         }
     }
@@ -55,6 +65,11 @@ abstract class Command extends SymfonyCommand
     }
 
     abstract public function handle();
+
+    protected function write($message)
+    {
+        $this->output->writeln($message);
+    }
 
     protected function info($message)
     {
@@ -83,6 +98,11 @@ abstract class Command extends SymfonyCommand
         );
 
         return $this->ask($question);
+    }
+
+    protected function confirmOrAbort($question, $default)
+    {
+        return $this->confirm($question, $default) ? true : $this->abort();
     }
 
     protected function choose($question, $choices, $default)
@@ -206,5 +226,41 @@ abstract class Command extends SymfonyCommand
         });
 
         return $this;
+    }
+
+    protected function argument($name)
+    {
+        return $this->input->getArgument($name);
+    }
+
+    protected function setContainerForService($service)
+    {
+        $this->container = $this->project->service($service);
+
+        $this->confirmIfCustomContainer();
+    }
+
+    protected function confirmIfCustomContainer()
+    {
+        return $this->container->image()->isCustom() && $this->confirmOverwrite();
+    }
+
+    protected function confirmOverwrite()
+    {
+        $service = $this->container->service();
+
+        if ($this->confirmOrAbort(
+            sprintf(
+                'You are using a custom image "%s" for the service %s. Do you want to overwrite it?',
+                $this->container->image(),
+                $service
+            ),
+            'no'
+        )) {
+
+            $this->project->remove($service);
+
+            $this->setContainerForService($service);
+        }
     }
 }

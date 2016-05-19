@@ -1,9 +1,8 @@
 server {
     listen  80;
-    root /code/public/;
+    root /code/$DIRECTORY/;
 
     index index.html index.htm index.php;
-
     charset utf-8;
 
     location / {
@@ -18,10 +17,8 @@ server {
     client_max_body_size 100m;
 
     location ~ ^/.+\.php(/|$) {
-        fastcgi_pass php:9000;
         include fastcgi_params;
         fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_pass php:9000;
     }
 }
-
-include /etc/nginx/sites/*;

@@ -10,16 +10,11 @@ class EnvFile extends Config
     protected $content = '';
     protected $variables = [];
 
-    public function __construct($filePath = '', $fileSystem = null)
+    public function __construct($filePath = '', $content = '')
     {
-        if (!$fileSystem || !$fileSystem->exists($filePath)) {
-            $this->variables = [];
-
-            return $this;
-        }
-
         $this->filePath = $filePath;
-        $this->content  = $fileSystem->get($this->filePath);
+        $this->content = $content;
+
         $this->loadContent();
     }
 
@@ -28,7 +23,7 @@ class EnvFile extends Config
         return $this->filePath;
     }
 
-    protected function loadContent()
+    private function loadContent()
     {
         $lines = explode("\n", $this->content);
 
@@ -37,7 +32,7 @@ class EnvFile extends Config
         }, $lines);
     }
 
-    protected function loadVariable($line)
+    private function loadVariable($line)
     {
         if (stristr($line, '=')) {
             $config = explode('=', $line);
@@ -45,14 +40,19 @@ class EnvFile extends Config
         }
     }
 
-    public static function load($filePath, $fileSystem)
+    public static function load($filename, $content)
     {
-        return new static($filePath, $fileSystem);
+        return new static($filename, $content);
     }
 
     public function get($key)
     {
         return array_key_exists($key, $this->variables) ? $this->variables[$key] : '';
+    }
+
+    public function has($key)
+    {
+        return array_key_exists($key, $this->variables);
     }
 
     public function set($key, $value)
@@ -76,8 +76,18 @@ class EnvFile extends Config
         return collect($this->variables)->filter($callback);
     }
 
+    public function content()
+    {
+        return $this->content;
+    }
+
     public function __toString()
     {
         return $this->content;
+    }
+
+    public function toArray()
+    {
+        return $this->filePath;
     }
 }

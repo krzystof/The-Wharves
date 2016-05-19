@@ -4,17 +4,16 @@ namespace Wharf\Commands;
 
 class Web extends Command
 {
-    protected $name = 'web';
-
+    protected $name        = 'web';
     protected $description = 'Change the web server on your environment.';
 
     public function handle()
     {
-        $this->container = $this->project->service('web');
+        $this->setContainerForService('web');
 
         $this->displayCurrentContainerAndConfirmUpdate();
 
-        $this->container->image('nginx');
+        $this->container->image('wharf/nginx:1.8.1');
 
         $this->info(sprintf(
             'Using %s version %s',

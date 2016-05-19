@@ -9,14 +9,19 @@ class DbContainer extends Container
     //     return collect(['mysql', 'postgres']);
     // }
 
-    public static function service()
+    public function service()
     {
         return 'db';
     }
 
+    protected function defaultSettings()
+    {
+        return collect(['env_file' => '.env']);
+    }
+
     protected function configurables()
     {
-        return collect(['DB_USERNAME']);
+        return collect(['DB_DATABASE', 'DB_USERNAME', 'DB_PASSWORD']);
     }
 
     protected function requiredSettings()

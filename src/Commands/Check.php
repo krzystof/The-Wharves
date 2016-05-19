@@ -8,8 +8,7 @@ use Wharf\Processes\DockerComposeVersion;
 
 class Check extends Command
 {
-    protected $name = 'check';
-
+    protected $name        = 'check';
     protected $description = 'Check that your machine meets the requirements.';
 
     public function handle()
@@ -31,6 +30,7 @@ class Check extends Command
         }
 
         // TODO display here the version used
+        // TODO display a notice if docker compose < 1.6
 
         $this->info('Docker and docker-compose are installed. Everything is good to go.');
     }

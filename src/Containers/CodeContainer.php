@@ -2,20 +2,29 @@
 
 namespace Wharf\Containers;
 
+use Illuminate\Support\Collection;
+
 class CodeContainer extends Container
 {
-    public static function service()
+    public function service()
     {
         return 'code';
     }
 
+    protected function defaultSettings()
+    {
+        return new Collection([
+            'volumes' => ['.:/code'],
+        ]);
+    }
+
     protected function configurables()
     {
-        return collect();
+        return new Collection;
     }
 
     protected function requiredSettings()
     {
-        return collect();
+        return new Collection;
     }
 }

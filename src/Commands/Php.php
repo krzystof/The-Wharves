@@ -6,17 +6,16 @@ use Wharf\Containers\Image;
 
 class Php extends Command
 {
-    protected $name = 'php';
-
+    protected $name        = 'php';
     protected $description = 'Change the php version of your environment.';
 
     public function handle()
     {
-        $this->container = $this->project->service('php');
+        $this->setContainerForService('php');
 
         $this->displayCurrentContainerAndConfirmUpdate();
 
-        $image = Image::make('php:php');
+        $image = Image::make('php', 'wharf/php');
 
         $version = $this->choose(
             'Which version of php would you like to use?',

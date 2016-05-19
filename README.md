@@ -1,5 +1,8 @@
 ## Wharf... is Coming Soon.
 
+### Handle env file
+if .env exists, load it. If not, prompt. When checking a container configuration, check for the .env file. if not, prompt.
+
 ### Beta soon...
 
 Wharf is just a php command line app that will set up a docker-compose.yml file in a sec using images in docker hub's Wharf namespace. In fact, it is a wrapper around a wrapper around a... you know. I just wanted a quick way to build my dev environment, without looking in older projects to find out how I did it last time.

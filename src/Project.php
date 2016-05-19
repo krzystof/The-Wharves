@@ -11,8 +11,6 @@ use Illuminate\Filesystem\Filesystem;
 class Project
 {
     const WHARF = 'wharf';
-    const PROJECT = 'project';
-
     private static $commonDir = ['public', 'web', 'www'];
     private $filesystem;
     private $projectRoot;
@@ -39,11 +37,9 @@ class Project
 
     public function __construct($filesystem, $projectRoot, $envFile = '.env')
     {
-        $this->filesystem = $filesystem;
-
+        $this->filesystem  = $filesystem;
         $this->projectRoot = $projectRoot;
-
-        $this->envFile = $envFile;
+        $this->envFile     = $envFile;
 
         $this->loadDockerComposeFile();
     }
@@ -69,7 +65,11 @@ class Project
 
     private function loadEnvFile()
     {
-        return $this->envFile = new EnvFile($this->envFile, $this->filesystem);
+        $envFileContent = $this->filesystem->exists($this->envFile)
+                        ? $this->filesystem->get($this->envFile)
+                        : '';
+
+        return $this->envFile = new EnvFile($this->envFile, $envFileContent);
     }
 
     private function loadDockerComposeFile()
@@ -78,14 +78,14 @@ class Project
             return $this->loadProjectDockerComposeFile();
         }
 
-        return $this->dockerComposeFile = new DockerComposeYml;
+        return $this->dockerComposeFile = new DockerComposeYml([], $this->envFile());
     }
 
     private function loadProjectDockerComposeFile()
     {
         $parsedFile = Yaml::parse($this->filesystem->get($this->project($this->dockerComposeFilename)));
 
-        return $this->dockerComposeFile = new DockerComposeYml($parsedFile);
+        return $this->dockerComposeFile = new DockerComposeYml($parsedFile, $this->envFile());
     }
 
     private function project($filepath = '')
@@ -99,7 +99,12 @@ class Project
             $this->dockerComposeFile->setContainer($container);
         }
 
-        $this->dockerComposeFile->saveInFiles($this->filesystem);
+        $this->dockerComposeFile->saveInFile($this->filesystem);
+    }
+
+    public function remove($service)
+    {
+        return $this->dockerComposeFile->removeContainer($service)->saveInFile($this->filesystem);
     }
 
     public function dbIsLocalhost()
@@ -111,7 +116,7 @@ class Project
     {
         $this->envFile()->set($key, $value);
 
-        $this->filesystem->put($this->envFile()->name(), $this->envFile());
+        $this->filesystem->put($this->envFile()->name(), $this->envFile()->content());
     }
 
     public function detectDirectoryToServe()
@@ -127,7 +132,7 @@ class Project
 
     public function service($name)
     {
-        return $this->dockerComposeFile->container($name);
+        return $this->dockerComposeFile->container($name, $this->envFile);
     }
 
     public function writableDirectories()

@@ -18,7 +18,7 @@ class Code extends Command
 
         $this->displayCurrentContainerAndConfirmUpdate();
 
-        $image = Image::make('code:code');
+        $image = Image::make('code', 'wharf/code');
 
         $this->setImageIfNotSame($image)
              ->displayCurrentContainer()
