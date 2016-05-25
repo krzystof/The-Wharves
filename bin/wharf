@@ -37,18 +37,8 @@ $commands = [
     Wharf\Commands\Ls::class,
 ];
 
-foreach ($commands as $command) {
+collect($commands)->each(function ($command) use ($app) {
     $app->add(new $command);
-}
-
-// $app->add(new Wharf\Commands\Check);
-// $app->add(new Wharf\Commands\Code);
-// $app->add(new Wharf\Commands\Web);
-// $app->add(new Wharf\Commands\Php);
-// $app->add(new Wharf\Commands\Db);
-// $app->add(new Wharf\Commands\Permissions);
-// $app->add(new Wharf\Commands\Init);
-// $app->add(new Wharf\Commands\Destroy);
-// $app->add(new Wharf\Commands\Ls);
+});
 
 $app->run();

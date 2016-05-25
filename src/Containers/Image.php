@@ -2,35 +2,19 @@
 
 namespace Wharf\Containers;
 
+use Wharf\WharfImages;
 use Illuminate\Contracts\Support\Arrayable;
 
 class Image implements Arrayable
 {
-    const NOT_SET = 'not_set';
-
-    private static $images = [
-        'web'     => [
-            'wharf/nginx' => ['1.8.1']
-        ],
-        'php'     => [
-            'wharf/php' => ['7.0.5', '5.6']
-        ],
-        'db'      => [
-            'wharf/mysql' => '5.7.12',
-            'postgres' => '1.0.0'
-        ],
-        'code'    => ['wharf/code' => 'latest'],
-        'not_set' => ['not_set' => self::NOT_SET],
-    ];
-
     private $name;
     private $tag;
     private $is_custom = false;
 
     private function __construct($service = null, $name = null, $tag = null)
     {
-        $this->service = $service ?: self::NOT_SET;
-        $this->name    = $name    ?: self::NOT_SET;
+        $this->service = $service ?: WharfImages::NOT_SET;
+        $this->name    = $name    ?: WharfImages::NOT_SET;
         $this->tag     = $tag ?: $this->latest();
 
         $this->validateImage();
@@ -131,9 +115,9 @@ class Image implements Arrayable
         return collect($this->findService()->get($this->name));
     }
 
-    private function images()
+    private static function images()
     {
-        return collect(static::$images);
+        return WharfImages::all();
     }
 
     public function toArray()
@@ -143,7 +127,7 @@ class Image implements Arrayable
 
     public function exists()
     {
-        return $this->name !== self::NOT_SET && $this->tag !== self::NOT_SET;
+        return $this->name !== WharfImages::NOT_SET && $this->tag !== WharfImages::NOT_SET;
     }
 
     public function versionTo($version)
@@ -177,8 +161,8 @@ class Image implements Arrayable
 
     public static function all()
     {
-        return collect(static::$images)->filter(function ($image, $service) {
-            return ! in_array($service, ['code', self::NOT_SET]);
+        return static::images()->filter(function ($image, $service) {
+            return ! in_array($service, ['code', WharfImages::NOT_SET]);
         });
     }
 }

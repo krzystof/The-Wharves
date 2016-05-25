@@ -16,13 +16,15 @@ abstract class Container implements Arrayable
     abstract protected function configurables();
     abstract protected function requiredSettings();
 
-    public static function fromConfig($config, $envFile)
+    public static function fromConfig($containerName, $config, $envFile)
     {
-        return new static($config, $envFile);
+        return new static($containerName, $config, $envFile);
     }
 
-    private function __construct($config = [], $envFile = [])
+    private function __construct($containerName, $config = [], $envFile = [])
     {
+        $this->name = $containerName;
+
         $this->isNew = count($config) === 0;
 
         if ($this->defaultSettings()->has('env_file')) {
@@ -37,11 +39,6 @@ abstract class Container implements Arrayable
         if (! $this->isValidSetting($key)) {
             return null;
         }
-
-        // if ($key === 'DIRECTORY') {
-        //     dd($key, $this->envFile()->has($key), $this->envFile()->has('APP_ENV'));
-        //     # code...
-        // }
 
         if ($this->config->has('environment') && $this->config->get('environment')->has($key)) {
             return $this->environment()->get($key);

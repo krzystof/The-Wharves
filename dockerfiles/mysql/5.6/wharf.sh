@@ -1,0 +1,7 @@
+#!/bin/bash
+export MYSQL_ROOT_PASSWORD=$DB_PASSWORD
+export MYSQL_DATABASE=$DB_DATABASE
+export MYSQL_USER=$DB_USERNAME
+export MYSQL_PASSWORD=$DB_PASSWORD
+
+docker-entrypoint.sh "$@"

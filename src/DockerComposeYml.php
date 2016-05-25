@@ -32,9 +32,9 @@ class DockerComposeYml
     {
         $this->containers = new Collection;
 
-        foreach ($parsedFile as $name => $config) {
+        collect($parsedFile)->each(function ($config, $name) use ($envFile) {
             $this->containers->put($name, WharfContainers::make($name, $config, $envFile));
-        }
+        });
     }
 
     public function setContainer($container)

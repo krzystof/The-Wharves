@@ -8,11 +8,9 @@ use Wharf\Project\Container;
 
 class Destroy extends Command
 {
-    protected $name = 'destroy';
-
+    protected $name        = 'destroy';
     protected $description = 'Destroy a container';
-
-    protected $arguments = ['container' => 'The container that you would like to destroy.'];
+    protected $arguments   = ['container' => 'The container that you would like to destroy.'];
 
     public function handle()
     {
@@ -22,7 +20,8 @@ class Destroy extends Command
             $this->abort(sprintf('The service "%s" is not in your docker-compose.yml file.', $service));
         }
 
-        $message = sprintf('This command will remove the container "%s" from your docker composer file. Are you sure?', $service);
+        $message = sprintf('This command will remove the container "%s" from your docker composer file. '
+                          .'Are you sure?', $service);
 
         $this->confirmOrAbort($message, 'no');
 

@@ -6,12 +6,6 @@ use Illuminate\Support\Collection;
 
 class EmptyContainer extends Container
 {
-    public function __construct($name)
-    {
-        $this->service = $name;
-        $this->config = collect([]);
-    }
-
     public function service()
     {
         return $this->name;

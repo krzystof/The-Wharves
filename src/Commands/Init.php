@@ -16,7 +16,6 @@ class Init extends Command
 
         $this->runCommandOnProject('check')
              ->runCommandOnProject('php')
-             ->runCommandOnProject('cli')
              ->runCommandOnProject('web')
              ->runCommandOnProject('db')
              ->runCommandOnProject('code')

@@ -8,7 +8,7 @@ class WharfContainers
     {
         $containerName = static::normalize($container);
 
-        return $containerName::fromConfig($config, $envFile);
+        return $containerName::fromConfig($container, $config, $envFile);
     }
 
     private static function normalize($containerName)

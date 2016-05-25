@@ -12,7 +12,7 @@ class WebContainerTest extends \PHPUnit_Framework_TestCase
 {
     function setUp()
     {
-        $this->webContainer = WharfContainers::make('web', ['image' => 'wharf/nginx:1.8.1'], new Envfile);
+        $this->webContainer = WharfContainers::make('web', ['image' => 'wharf/nginx:1.8'], new Envfile);
 
         $this->output = new BufferedOutput;
 
@@ -109,7 +109,7 @@ class WebContainerTest extends \PHPUnit_Framework_TestCase
 
     function test_it_should_display_its_version()
     {
-        $this->assertRegExp('/Version\s+1.8.1/', $this->infos);
+        $this->assertRegExp('/Version\s+1.8/', $this->infos);
     }
 
     function test_it_should_display_unset_app_url()

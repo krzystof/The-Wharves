@@ -25,17 +25,17 @@ class ImageTest extends \PHPUnit_Framework_TestCase
     /** @test */
     function it_should_return_its_tag()
     {
-        $image = Image::make('web', 'nginx:1.8.1');
+        $image = Image::make('web', 'nginx:1.8');
 
-        $this->assertEquals('1.8.1', $image->tag());
+        $this->assertEquals('1.8', $image->tag());
     }
 
     /** @test */
     function it_can_be_converted_to_a_string()
     {
-        $image = Image::make('web', 'nginx:1.8.1');
+        $image = Image::make('web', 'nginx:1.8');
 
-        $this->assertEquals('nginx:1.8.1', $image->__toString());
+        $this->assertEquals('nginx:1.8', $image->__toString());
     }
 
     /** @test @expectedException Exception */
@@ -56,7 +56,7 @@ class ImageTest extends \PHPUnit_Framework_TestCase
     {
         $image = Image::make('web', 'wharf/nginx');
 
-        $this->assertEquals('1.8.1', $image->tag());
+        $this->assertEquals('1.8', $image->tag());
     }
 
     /** @expectedException Exception*/
@@ -90,7 +90,7 @@ class ImageTest extends \PHPUnit_Framework_TestCase
     /** @test */
     function it_should_change_a_version()
     {
-        $image = Image::make('php', 'wharf/php:7.0.5');
+        $image = Image::make('php', 'wharf/php:7.0');
 
         $image = $image->versionTo('5.6');
 
@@ -106,7 +106,7 @@ class ImageTest extends \PHPUnit_Framework_TestCase
     }
 
     /** @test */
-    function it_should_compare_to_the_different_image()
+    function it_should_see_that_images_are_different()
     {
         $imageA = Image::make('php', 'php:7.0');
         $imageB = Image::make('php', 'php:5.6');
