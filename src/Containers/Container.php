@@ -40,7 +40,7 @@ abstract class Container implements Arrayable
             return null;
         }
 
-        if ($this->config->has('environment') && $this->config->get('environment')->has($key)) {
+        if ($this->config->has('environment') && collect($this->config->get('environment'))->has($key)) {
             return $this->environment()->get($key);
         }
 

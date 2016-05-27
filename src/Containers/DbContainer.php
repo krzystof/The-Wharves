@@ -4,11 +4,6 @@ namespace Wharf\Containers;
 
 class DbContainer extends Container
 {
-    // public static function supportedImages()
-    // {
-    //     return collect(['mysql', 'postgres']);
-    // }
-
     public function service()
     {
         return 'db';
@@ -16,7 +11,12 @@ class DbContainer extends Container
 
     protected function defaultSettings()
     {
-        return collect(['env_file' => '.env']);
+        return collect([
+            'env_file'    => '.env',
+            'ports'       => ['3307:3306'],
+            'volumes'     => ['./.database:/var/lib/mysql'],
+            'environment' => [],
+        ]);
     }
 
     protected function configurables()
@@ -26,6 +26,6 @@ class DbContainer extends Container
 
     protected function requiredSettings()
     {
-        return collect(['DB_USERNAME' => 'wharf_user']);
+        return collect(['DB_DATABASE' => 'wharf_db', 'DB_USERNAME' => 'wharf_user', 'DB_PASSWORD' => 'secret']);
     }
 }

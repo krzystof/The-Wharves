@@ -15,6 +15,9 @@ class WharfImages
             'php' => [
                 'wharf/php' => ['7.0', '5.6', '5.5']
             ],
+            'cli' => [
+                'wharf/cli' => ['7.0', '5.6', '5.5']
+            ],
             'db' => [
                 'wharf/mysql' => ['5.7', '5.6', '5.5'],
                 'postgres' => '1.0.0'

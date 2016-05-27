@@ -13,7 +13,7 @@ class Web extends Command
 
         $this->displayCurrentContainerAndConfirmUpdate();
 
-        $this->container->image('wharf/nginx:1.8.1');
+        $this->container->image('wharf/nginx:1.8');
 
         $this->info(sprintf(
             'Using %s version %s',

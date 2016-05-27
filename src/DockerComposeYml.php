@@ -51,7 +51,7 @@ class DockerComposeYml
 
     private function orderOfService($service)
     {
-        return collect(['code', 'php', 'web', 'db'])->search($service);
+        return collect(['web', 'php', 'cli', 'db', 'code'])->search($service);
     }
 
     private function hasSavedAllContainers()

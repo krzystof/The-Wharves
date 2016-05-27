@@ -15,20 +15,28 @@ class Php extends Command
 
         $this->displayCurrentContainerAndConfirmUpdate();
 
-        $image = Image::make('php', 'wharf/php');
+        $phpImage = Image::make('php', 'wharf/php');
 
         $version = $this->choose(
             'Which version of php would you like to use?',
-            $image->availableTags()->toArray(),
+            $phpImage->availableTags()->toArray(),
             $this->container->image()->tag()
         );
 
-        $image = $image->versionTo($version);
+        $phpImage = $phpImage->versionTo($version);
 
-        $this->setImageIfNotSame($image);
+        $this->setImageIfNotSame($phpImage)
+             ->updateCliContainer($version)
+             ->displayCurrentContainer()
+             ->saveProject();
+    }
 
-        $this->displayCurrentContainer();
+    private function updateCliContainer($version)
+    {
+        $cliImage   = Image::make('cli', 'wharf/cli')->versionTo($version);
+        $cliService = $this->project->service('cli')->image($cliImage);
+        $this->project->save($cliService);
 
-        $this->saveProject();
+        return $this;
     }
 }

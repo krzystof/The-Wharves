@@ -29,7 +29,6 @@ $commands = [
     Wharf\Commands\Code::class,
     Wharf\Commands\Web::class,
     Wharf\Commands\Php::class,
-    Wharf\Commands\Cli::class,
     Wharf\Commands\Db::class,
     Wharf\Commands\Permissions::class,
     Wharf\Commands\Init::class,

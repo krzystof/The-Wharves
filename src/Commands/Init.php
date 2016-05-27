@@ -4,10 +4,8 @@ namespace Wharf\Commands;
 
 class Init extends Command
 {
-    protected $name = 'init';
-
+    protected $name        = 'init';
     protected $description = 'Set up a docker compose environment for a laravel app.';
-
     protected $optionFlags = ['fast' => 'Set up the environment with the default settings'];
 
     public function handle()
